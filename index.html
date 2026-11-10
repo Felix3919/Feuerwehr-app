@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.17.0">
+<meta name="version" content="0.18.0">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -330,6 +330,9 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .demo{border:1.5px dashed var(--line);border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--muted);font-size:15px}
 .demo span{flex:1;min-width:200px}
 .demo-btns{display:flex;flex-wrap:wrap;gap:8px}
+.demo-addr{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px}
+.demo-addr input{flex:2 1 240px;min-width:0;min-height:48px;border:1.5px solid var(--line);border-radius:8px;padding:0 12px;font:inherit;font-weight:500;background:var(--surface);color:var(--ink)}
+.demo-addr input#dCity{flex:1 1 160px}
 .foot-m{display:none;color:var(--muted);font-size:14px;padding:0 4px}
 @media (max-width:760px){.foot-m{display:block}}
 </style>
@@ -384,6 +387,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
   </section>
   <div class="demo">
     <span>Vorschau: Alarmierungen und Rückmeldungen sind Beispieldaten.</span>
+    <div class="demo-addr" id="demoAddr"><input id="dStreet" placeholder="Adresse für Probealarm: Straße und Hausnummer" autocomplete="off" aria-label="Straße und Hausnummer für den Probealarm"><input id="dCity" placeholder="PLZ und Ort" autocomplete="off" aria-label="PLZ und Ort für den Probealarm"></div>
     <div class="demo-btns" id="demoBtns"><button class="btn" data-demo="0">Probealarm Hausbrand</button><button class="btn" data-demo="1">Probealarm Verkehrsunfall</button><button class="btn" data-demo="2">Probealarm Industrie (Großeinsatz)</button></div>
     <button class="btn primary" id="demoAlarm" hidden>Einsatz beenden</button>
   </div>
@@ -811,7 +815,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 </template>
 
 <script>
-const APP_VERSION="0.17.0";
+const APP_VERSION="0.18.0";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -851,6 +855,7 @@ const demoAlarms=[
  {a:"B",l:3,what:"Brand Wohnhaus",street:"Hauptstraße 12",city:"2325 Velm",text:"Rauch aus Dachstuhl, Personen laut Anrufer im Freien",units:"FF Velm, FF Himberg, FF Pellendorf",first:2},
  {a:"T",l:2,what:"Verkehrsunfall",street:"B15 Höhe Kreisverkehr",city:"2325 Velm",text:"PKW gegen Baum, eine Person eingeklemmt",units:"FF Velm, FF Himberg",first:2},
  {a:"B",l:4,what:"Brand Industriebetrieb",street:"Gewerbestraße 8",city:"2325 Velm",text:"Vollbrand Lagerhalle, starke Rauchentwicklung, Gefahrstofflager betroffen, eine Person vermisst",units:"FF Velm, FF Himberg, FF Pellendorf, FF Gutenhof, FF Zwölfaxing, FF Moosbrunn, FF Schwechat",first:4}];
+const demoAddr={street:"",city:""};
 const recent=[{a:"T",l:1,what:"Fahrzeugbergung",where:"Hauptstraße",when:"03.11.2026"},{a:"B",l:1,what:"Brandverdacht",where:"Feldweg Richtung Gutenhof",when:"28.10.2026"},{a:"S",l:1,what:"CO-Alarm",where:"Kirchengasse",when:"19.10.2026"}];
 const crew=[["Andreas Berger",["GK","ATS"]],["Thomas Huber",["MA","C"]],["Stefan Wagner",["ATS"]],["Markus Gruber",["ATS","C"]],["Lukas Bauer",["ATS"]],
  ["Michael Steiner",["MA","C"]],["Daniel Hofer",["GK"]],["Florian Pichler",["ATS"]],["Julia Mayer",["ATS"]],["Christian Moser",["C"]],
@@ -1112,12 +1117,14 @@ function startChat(){
 function initAlarmView(){
  $("#demoAlarm").onclick=()=>endAlarm();
  $("#demoBtns").onclick=e=>{const b=e.target.closest("[data-demo]");if(b)startAlarm(+b.dataset.demo);};
+ const ds=$("#dStreet"),dc=$("#dCity");ds.value=demoAddr.street;dc.value=demoAddr.city;
+ ds.oninput=()=>{demoAddr.street=ds.value;};dc.oninput=()=>{demoAddr.city=dc.value;};
  $("#quals").onclick=e=>{const b=e.target.closest("[data-q]");if(!b)return;qf=qf===b.dataset.q?null:b.dataset.q;renderResp(true);};
  renderAlarm();
 }
 function renderAlarm(){
  if(view!=="alarmierung")return;
- $("#alarmView").hidden=!alarm;$("#quietView").hidden=!!alarm;$("#demoAlarm").hidden=!alarm;$("#demoBtns").hidden=!!alarm;
+ $("#alarmView").hidden=!alarm;$("#quietView").hidden=!!alarm;$("#demoAlarm").hidden=!alarm;$("#demoBtns").hidden=!!alarm;$("#demoAddr").hidden=!!alarm;
  if(!alarm)return;
  const c=AS[alarm.a].c[alarm.l],box=$("#alarmBox");box.style.setProperty("--c",c);box.style.setProperty("--i",inkOn(c));
  $("#aCode").textContent=alarm.a+alarm.l;$("#aWhat").textContent=alarm.what;
@@ -1192,7 +1199,8 @@ function tick(){const el=$("#since");if(!el||!alarm)return;const s=Math.floor((D
 function badge(){renderSide();}
 
 function startAlarm(n){
- alarm=demoAlarms[n||0];alarmStart=Date.now();resp=[];extra.clear();moreOpen=false;startChat();startOE();
+ {const d=demoAlarms[n||0],s=demoAddr.street.trim(),c=demoAddr.city.trim();alarm={...d,street:s||d.street,city:c||(s?"":d.city)};}
+ alarmStart=Date.now();resp=[];extra.clear();moreOpen=false;startChat();startOE();
  clearInterval(clock);clock=setInterval(tick,1000);
  clearTimeout(respTimer);
  const order=crew.map((c,i)=>i).sort(()=>Math.random()-.5).slice(0,14);let k=0;
