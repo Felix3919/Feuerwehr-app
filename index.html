@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B3261E">
+<meta name="version" content="0.17.0">
+<title>Einsatz FF Velm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E9ECEF;--surface:#FFFFFF;--ink:#15181C;--muted:#5B636D;--line:#C7CDD4;--red:#B3261E;--on-red:#FFFFFF;--soft:#F7E4E2;--ok:#1E7B3A;--ok-soft:#E1F1E5;--hdr:62px;color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--surface:#1C2025;--ink:#E7E9EC;--muted:#9AA3AD;--line:#363D45;--red:#D9443A;--on-red:#FFFFFF;--soft:#3A2220;--ok:#4CB46A;--ok-soft:#1A2E21;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121417;--surface:#1C2025;--ink:#E7E9EC;--muted:#9AA3AD;--line:#363D45;--red:#D9443A;--on-red:#FFFFFF;--soft:#3A2220;--ok:#4CB46A;--ok-soft:#1A2E21;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.4 "Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+svg{flex:none}
+[hidden]{display:none!important}
+
+/* Kopfleiste */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--surface);border-bottom:1px solid var(--line);height:var(--hdr)}
+.bar{display:flex;align-items:center;gap:12px;padding:0 16px;height:100%}
+.crest{width:40px;height:40px}
+.brand{flex:1;min-width:0}
+.brand b{display:block;font:700 26px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.01em}
+.brand small{color:var(--muted);font-size:14px}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.conn i{width:10px;height:10px;border-radius:50%;background:var(--ok)}
+.conn.off i{background:var(--muted)}
+
+/* Grundgerüst: Menü links, Inhalt rechts */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr)}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr));align-self:start;height:calc(100vh - var(--hdr) - env(safe-area-inset-top,0px));
+  display:flex;flex-direction:column;gap:2px;padding:12px 10px;background:var(--surface);border-right:1px solid var(--line);overflow-y:auto}
+.nav-i{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 12px;border:0;border-radius:8px;background:transparent;font-weight:600;cursor:pointer;text-align:left;position:relative;color:var(--muted)}
+.nav-i svg{width:24px;height:24px}
+.nav-i:hover{background:var(--bg);color:var(--ink)}
+.nav-i[aria-current="page"]{background:var(--soft);color:var(--red)}
+.nav-i[aria-current="page"]::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:2px;background:var(--red)}
+.nav-i.main{min-height:64px;font-size:19px;color:var(--ink)}
+.nav-i.main[aria-current="page"]{color:var(--red)}
+.nav-i.main svg{width:28px;height:28px}
+.nav-i .lbl{flex:1;min-width:0;line-height:1.15}
+.nav-i .lbl small{display:block;font-size:13px;font-weight:500;color:var(--muted)}
+.badge{font:700 16px/1 "Barlow Condensed",sans-serif;padding:5px 8px;border-radius:5px}
+.sep{height:1px;background:var(--line);margin:8px 6px}
+.nav-i.final{color:var(--ink)}
+.side-foot{margin-top:auto;padding:12px 12px 4px;color:var(--muted);font-size:13px}
+.side-hint{padding:2px 12px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.nav-i .unread{min-width:24px;height:24px;border-radius:12px;background:var(--red);color:var(--on-red);font-size:13px;font-weight:700;display:inline-grid;place-items:center;padding:0 7px}
+/* Chat */
+.chat{gap:10px}
+.msgs{list-style:none;margin:0;padding:12px;display:flex;flex-direction:column;gap:8px;height:min(55vh,520px);min-height:260px;overflow-y:auto;background:var(--bg);border-radius:8px}
+.msg{max-width:80%;align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:6px 12px 4px}
+.msg.me{align-self:flex-end;background:var(--soft);border-color:transparent;border-radius:12px 12px 3px 12px}
+.msg .who{font-size:13px;font-weight:700;color:var(--red)}
+.msg time{display:block;text-align:right;font-size:12px;color:var(--muted)}
+.msg.sys{align-self:center;background:none;border:0;color:var(--muted);font-size:14px;text-align:center;max-width:100%}
+.quick{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.quick button{white-space:nowrap;border:1.5px solid var(--line);background:var(--surface);border-radius:20px;padding:0 14px;min-height:42px;font-weight:600;font-size:15px;cursor:pointer}
+.compose{display:flex;gap:8px}
+.compose input{flex:1;min-width:0;min-height:52px;border:1.5px solid var(--line);border-radius:8px;padding:0 14px;font:inherit;font-weight:500;background:var(--surface);color:var(--ink)}
+/* Gefahrstoffe: Warntafel */
+.plate-wrap{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.plate{--o:#FF4E12;--k:#16181C;background:var(--k);padding:clamp(10px,2.2vw,18px);border-radius:4px;display:grid;grid-template-rows:1fr 1fr;gap:clamp(10px,2.2vw,18px);width:min(100%,460px);aspect-ratio:4/3}
+.prow{position:relative;background:var(--o);display:flex;align-items:center;justify-content:center;font:700 clamp(64px,13vw,120px)/1 "Barlow Condensed","Arial Narrow",sans-serif;color:var(--k);cursor:text}
+.prow input{all:unset;width:100%;height:100%;text-align:center;font:inherit;color:inherit;caret-color:var(--k);letter-spacing:.06em}
+.prow input::placeholder{color:rgba(22,24,28,.25)}
+.prow:focus-within{box-shadow:inset 0 0 0 4px #FFFFFF}
+.prow .xs{position:absolute;left:.18em;pointer-events:none}
+.xbtn{min-width:64px;min-height:64px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 32px/1 "Barlow Condensed",sans-serif;cursor:pointer}
+.xbtn[aria-pressed="true"]{background:#16181C;color:#FF4E12;border-color:#16181C}
+.gside{display:grid;gap:8px}
+#gOut{display:grid;gap:10px}
+.gbox{border:1.5px solid var(--line);border-radius:8px;padding:12px 14px}
+.gbox h3{margin:0 0 4px;font-size:14px;color:var(--muted)}
+.gbox .big{font:700 26px/1.1 "Barlow Condensed",sans-serif;display:block;margin-bottom:2px}
+.digits{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.digit{display:inline-flex;gap:8px;align-items:center;font-size:15px;background:var(--bg);border-radius:6px;padding:5px 10px}
+.digit b{font:700 20px/1 "Barlow Condensed",sans-serif}
+.gwarn{background:var(--red);color:var(--on-red);border-radius:8px;padding:12px 14px;font-weight:700}
+.gnote{margin:8px 0 0;color:var(--red);font-weight:600}
+.gsrc{margin:0;font-size:13px;color:var(--muted)}
+/* Beteiligte Organisationseinheiten */
+.oe-h{margin-top:10px}
+.oe-wrap{overflow-x:auto}
+.oe{width:100%;border-collapse:collapse;font-size:16px}
+.oe th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:6px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap}
+.oe td{padding:10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+.oe td:first-child{font-weight:600;white-space:normal}
+.oe .nach{font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border-radius:4px;padding:2px 6px;margin-left:6px}
+/* Gefährliche Stoffe: Reiter, Inhalte */
+.gtabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.gtabs::-webkit-scrollbar{display:none}
+.gtabs button{border:0;background:none;padding:0 14px;min-height:50px;font-weight:600;font-size:16px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;cursor:pointer}
+.gtabs button[aria-selected="true"]{color:var(--red);border-bottom-color:var(--red)}
+.gp{display:grid;gap:14px;align-content:start}
+.gp h3{margin:0 0 4px;font:700 22px/1.1 "Barlow Condensed",sans-serif}
+.gul{margin:0;padding-left:20px;display:grid;gap:3px}
+.gams{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.gams>li{display:grid;grid-template-columns:52px 1fr;gap:12px;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px 12px 8px}
+.gams .L{font:700 48px/.9 "Barlow Condensed",sans-serif;color:var(--red);text-align:center}
+.gzone{width:100%;max-width:640px;height:auto;color:var(--ink)}
+.gzone text{font:600 15px "Barlow",sans-serif;fill:#16181C}
+.gzone .lt{fill:currentColor}
+.acc{border:1.5px solid var(--line);border-radius:8px;background:var(--surface)}
+.acc>summary{min-height:54px;display:flex;align-items:center;gap:8px;padding:6px 14px;font-weight:700;font-size:17px;cursor:pointer;list-style:none}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"+";margin-left:auto;font:700 26px/1 "Barlow",sans-serif;color:var(--muted)}
+.acc[open]>summary::after{content:"–"}
+.acc>summary small{font-weight:500;font-size:14px;color:var(--muted)}
+.acc .in{padding:0 14px 14px;display:grid;gap:12px}
+.tw{overflow-x:auto}
+.gt{width:100%;border-collapse:collapse;font-size:15px}
+.gt th,.gt td{border-top:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+.gt thead th{border-top:0;font-size:13px;color:var(--muted)}
+.gt .n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.gt .hi{color:var(--red);font-weight:700}
+.m4 td{text-align:center;font-size:20px;line-height:1}
+.m4 td.y{color:var(--red)}
+.m4 td.no{color:var(--line)}
+.m4 tbody tr{cursor:pointer}
+.m4 tbody th{font-weight:600;white-space:nowrap}
+.m4 tbody tr[aria-pressed="true"]{background:var(--soft)}
+.m4 tbody tr[aria-pressed="true"] th{color:var(--red)}
+#g4Out{margin:0;font-weight:600}
+.gsearch{font:inherit;font-weight:500;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:0 14px;min-height:52px;width:100%}
+.slist{list-style:none;margin:0;padding:0;display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.slist button{width:100%;text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 12px;min-height:56px;cursor:pointer}
+.slist button[aria-current="true"]{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.slist b{display:block;font-weight:600}
+.slist small{color:var(--muted);font-size:14px}
+.sdet{border:2px solid var(--red);border-radius:10px;padding:14px 16px;display:grid;gap:12px;scroll-margin-top:calc(var(--hdr) + 12px)}
+.sdet h2{font-size:32px}
+.sdet .x{margin-left:auto}
+.shd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.htag{display:inline-block;margin:0 6px 4px 0;font-size:13px;font-weight:700;padding:3px 9px;border-radius:4px;border:1.5px solid transparent}
+.h-F{background:#C62828;color:#FFFFFF}
+.h-T{background:#16181C;color:#FFFFFF;border-color:var(--line)}
+.h-C{background:#5B636D;color:#FFFFFF}
+.h-O{background:#F2C200;color:#16181C}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.kv>div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font:700 26px/1.1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.kv span{font-size:13px;color:var(--muted);font-weight:600}
+.kv small{display:block;font-size:13px;color:var(--muted)}
+.exb{display:grid;gap:4px}
+.exbar{position:relative;height:16px;background:var(--bg);border-radius:4px;overflow:hidden}
+.exbar i{position:absolute;top:0;bottom:0;background:var(--red)}
+.exlab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.ck{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.ck>div{border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+.ghint{border-left:4px solid var(--red);padding:2px 0 2px 12px;margin:0;font-weight:600}
+.dias{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px 12px}
+.dias li{display:flex;gap:16px;align-items:center;min-height:64px}
+.dia{width:44px;height:44px;margin:0 6px;transform:rotate(45deg);border:2px solid #16181C;outline:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.dia span{transform:rotate(-45deg);font:700 17px/1 "Barlow Condensed",sans-serif;background:rgba(255,255,255,.85);color:#16181C;border-radius:3px;padding:1px 3px}
+.dias b{display:block;font:700 20px/1 "Barlow Condensed",sans-serif}
+.dias small{font-size:14px;color:var(--muted);line-height:1.25;display:block}
+.sw{display:inline-block;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);vertical-align:-4px;margin-right:6px}
+.sw2{display:inline-grid;grid-template-columns:1fr 1fr;width:20px;height:20px;border-radius:50%;overflow:hidden;border:1.5px solid var(--line);vertical-align:-4px;margin-right:6px}
+.calc{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.calc input{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:0 10px;min-height:48px;width:110px}
+.calc output{font:700 24px/1 "Barlow Condensed",sans-serif}
+.gtel{font-weight:700;white-space:nowrap}
+.gp .muted+.muted{margin-top:-6px}
+.calc select{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:0 8px;min-height:48px}
+.nav-i.more{min-height:44px;font-size:15px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.nav-i.add{min-height:46px;margin:2px 0;border:1.5px dashed var(--line);color:var(--muted)}
+.nav-i.add .plus{font:700 22px/1 "Barlow",sans-serif;color:var(--red)}
+
+main{padding:16px;display:grid;gap:16px;align-content:start;max-width:1100px;width:100%}
+
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  .side{flex-direction:row;height:auto;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:6px 8px;z-index:5;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .nav-i,.nav-i.main{min-height:48px;font-size:16px;white-space:nowrap;padding:0 12px}
+  .nav-i .lbl small,.sep,.side-foot,.side-hint{display:none}
+  .nav-i[aria-current="page"]::before{left:10px;right:10px;top:auto;bottom:2px;width:auto;height:3px}
+}
+
+/* Alarm-Bühne */
+.stage{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.alarm{--c:#E5533B;--i:#FFFFFF;background:var(--c);color:var(--i);padding:18px 20px 20px;display:grid;gap:14px}
+.alarm-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;flex-wrap:wrap}
+.alarm-head .when{font:700 22px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.alarm-head .when small{font:inherit;opacity:.8;margin-right:6px}
+.alarm-head .since{margin-left:auto;display:flex;align-items:baseline;gap:6px}
+.siren{width:12px;height:12px;border-radius:50%;background:currentColor;animation:pulse 1s steps(2,jump-none) infinite}
+@keyframes pulse{50%{opacity:.25}}
+.alarm-head .t{margin-left:auto;font:700 22px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.alarm-main{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:center}
+.code{font:700 clamp(84px,14vw,132px)/.82 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:-.02em;grid-row:span 2}
+.what{font:700 clamp(26px,3.6vw,36px)/1.05 "Barlow Condensed",sans-serif}
+.where{font-size:19px;font-weight:600}
+.where small{display:block;font-weight:500;opacity:.85;font-size:16px}
+.alarm-text{background:rgba(0,0,0,.14);border-radius:8px;padding:10px 12px;font-size:16px}
+.alarm-text b{display:block;font-size:13px;opacity:.85;margin-bottom:2px}
+
+.respond{padding:16px 20px 20px;display:grid;gap:14px}
+h2{margin:0;font:700 24px/1.1 "Barlow Condensed",sans-serif}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cnt{border-radius:8px;padding:10px 12px;background:var(--bg)}
+.cnt b{display:block;font:700 44px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.cnt span{font-size:15px;font-weight:600}
+.cnt.yes{background:var(--ok-soft);color:var(--ok)}
+.cnt.no{background:var(--soft);color:var(--red)}
+.cnt.open{color:var(--muted)}
+.quals{display:flex;flex-wrap:wrap;gap:8px}
+.q{padding:6px 12px;border-radius:20px;border:1.5px solid var(--line);font-weight:600;font-size:15px}
+.q b{font-size:18px;margin-right:5px}
+.q.zero{border-color:var(--red);color:var(--red)}
+button.q{background:var(--surface);color:var(--ink);font:inherit;font-weight:600;font-size:15px;cursor:pointer;min-height:40px}
+button.q.zero{color:var(--red)}
+button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.plist .tg.hit{background:var(--ink);color:var(--surface)}
+.people{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:620px){.people{grid-template-columns:3fr 2fr}}
+.sub{margin:0 0 4px;font-size:15px;color:var(--muted)}
+#noBox{border:1.5px solid var(--red);border-radius:8px;padding:8px 12px}
+#yesBox{border:1.5px solid var(--ok);border-radius:8px;padding:8px 12px}
+.plist{list-style:none;margin:0;padding:0}
+.plist li{display:flex;align-items:center;gap:8px;padding:8px 4px;border-top:1px solid var(--line)}
+.plist li:first-child{border-top:0}
+.plist .n{font-weight:600;flex:1;min-width:0}
+.plist .tg{font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--bg);color:var(--muted)}
+.plist time{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.plist li.new{animation:in 1.2s ease-out}
+@keyframes in{from{background:var(--ok-soft)}}
+.empty{color:var(--muted);font-size:15px}
+@media (prefers-reduced-motion:reduce){.siren,.plist li.new{animation:none}}
+
+.btn{min-height:48px;padding:0 18px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn.primary{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.btn svg{width:20px;height:20px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+
+/* 3D-Ansicht Einsatzort */
+.m3d-wrap{position:relative;height:min(60vh,540px);min-height:300px;margin-top:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.m3d{position:absolute;inset:0}
+.m3d gmp-map-3d{display:block;width:100%;height:100%}
+.m3d-msg{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:20px;text-align:center;color:var(--muted);max-width:none}
+.m3d-spin{position:absolute;top:10px;right:10px;z-index:2}
+
+/* Ruhezustand */
+.quiet{padding:22px 20px;display:grid;gap:16px}
+.quiet-head{display:flex;align-items:center;gap:14px}
+.quiet-head svg{width:44px;height:44px;color:var(--ok)}
+.quiet-head b{display:block;font:700 30px/1 "Barlow Condensed",sans-serif}
+.quiet-head span{color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:12px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0;padding-top:0}
+.as{font:700 22px/1 "Barlow Condensed",sans-serif;text-align:center;padding:8px 0;border-radius:6px}
+.list b{display:block;font-weight:600}
+.list span{color:var(--muted);font-size:15px}
+.list time{color:var(--muted);font-size:14px;text-align:right}
+
+/* Unterseiten */
+.page-head{display:flex;align-items:center;gap:14px}
+.page-head svg{width:40px;height:40px;color:var(--red)}
+.page-head h1{margin:0;font:700 34px/1 "Barlow Condensed",sans-serif}
+.tag{font-size:13px;font-weight:700;padding:3px 8px;border-radius:4px;background:var(--bg);color:var(--muted)}
+.lead{margin:0;max-width:60ch}
+.dest{display:grid;gap:4px;border-left:4px solid var(--red);padding:4px 0 4px 14px}
+.dest b{font:700 28px/1.1 "Barlow Condensed",sans-serif}
+.dest span{color:var(--muted)}
+.muted{color:var(--muted);margin:0}
+
+/* Atemschutzüberwachung */
+.ats{display:grid;gap:16px}
+.ats .page-head{flex-wrap:wrap}
+.ats .page-head h1{flex:1}
+.ats-meta{display:grid;grid-template-columns:170px 1fr 220px;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
+.fld input,.fld textarea,.ats-in{font:inherit;font-weight:500;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:0 10px;min-height:44px;width:100%;min-width:0}
+.fld textarea{padding:8px 10px;min-height:60px;resize:vertical}
+.ats-set summary{cursor:pointer;font-weight:600}
+.ats-setg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.ats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:16px}
+.ats-tr{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:12px;align-content:start}
+.ats-tr.warn{border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.ats-th{display:flex;align-items:center;gap:8px}
+.ats-th h2{flex:1}
+.ats-x{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;border-radius:8px}
+.ats-stat{background:var(--bg);border-radius:8px;padding:12px 14px}
+.ats-pl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:8px}
+.ats-p{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;background:var(--bg);border-radius:8px;padding:8px 10px}
+.ats-pf{display:grid;gap:6px;min-width:0}
+.ats-pf .fld{font-size:12px}
+.ats-pf .fld input{min-height:40px;padding:0 8px}
+.btn.ats-addp{justify-self:start;border-style:dashed}
+.ats-bot{width:64px;height:auto;display:block}
+.ats-bot.leer{animation:pulse 1s steps(2,jump-none) infinite}
+.ats-bot.leer .sh{fill:var(--red);stroke:var(--red)}
+.ats-bot.leer .st{fill:var(--red)}
+.ats-bot .sh{fill:var(--surface);stroke:var(--muted);stroke-width:1.5}
+.ats-bot .st{fill:var(--muted)}
+.ats-bot .gl{fill:#FFFFFF;opacity:.3}
+.ats-bot .fl{transform-box:fill-box;transform-origin:50% 100%;transition:transform 1s linear,fill .4s}
+.ats-bot .fl.bl{animation:pulse 1s steps(2,jump-none) infinite}
+.ats-rest{font:700 44px/1 "Barlow Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.ats-st{font-weight:700;margin-top:2px}
+.ats-sub{color:var(--muted);font-size:15px;font-variant-numeric:tabular-nums}
+.ats-kb{display:inline-block;margin-top:6px;background:#E8B400;color:#15181C;border-radius:6px;padding:3px 8px;font-weight:700;font-size:14px}
+.ats-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ats-btns .btn{justify-content:center}
+.btn.ats-go{background:var(--ok);border-color:var(--ok);color:#FFFFFF}
+.btn:disabled{opacity:.45;cursor:default}
+.ats-n{position:relative}
+.ats-n span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700;font-size:14px}
+.ats-n input{padding-left:28px}
+.ats-chk{display:grid;gap:8px}
+.ats-chk label{display:flex;align-items:center;gap:10px;font-weight:600}
+.ats-chk input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--ok)}
+.ats-r3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ats-r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:760px){.ats-meta{grid-template-columns:1fr}.ats-setg{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.ats-bot .fl{transition:none}}
+
+.demo{border:1.5px dashed var(--line);border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--muted);font-size:15px}
+.demo span{flex:1;min-width:200px}
+.demo-btns{display:flex;flex-wrap:wrap;gap:8px}
+.foot-m{display:none;color:var(--muted);font-size:14px;padding:0 4px}
+@media (max-width:760px){.foot-m{display:block}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <svg class="crest" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="var(--red)"/><path d="M20 10c4 5 6 8 6 12a6 6 0 0 1-12 0c0-2 1-4 2-5 0 2 1 3 2 3 0-4 1-7 2-10z" fill="var(--on-red)"/></svg>
+    <div class="brand"><b>FF Velm</b><small>Einsatz-App <span class="ver"></span></small></div>
+    <span class="conn" id="conn"><i></i><span>Online</span></span>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="side" aria-label="Menü"></nav>
+  <main id="main"></main>
+</div>
+
+<!-- Vorlagen -->
+<template id="tpl-alarmierung">
+  <section class="stage" aria-live="assertive">
+    <div id="alarmView" hidden>
+      <div class="alarm" id="alarmBox">
+        <div class="alarm-head"><span class="siren" aria-hidden="true"></span><span class="when"><small>Alarmiert</small><span id="aWhen"></span></span><span class="since">seit <span class="t" id="since" aria-label="Zeit seit Alarmierung">00:00</span></span></div>
+        <div class="alarm-main">
+          <div class="code" id="aCode"></div>
+          <div class="what" id="aWhat"></div>
+          <div class="where" id="aWhere"></div>
+        </div>
+        <div class="alarm-text"><b>Alarmtext</b><span id="aText"></span></div>
+      </div>
+      <div class="respond">
+        <h2>Rückmeldungen der Mannschaft</h2>
+        <div class="counts" aria-live="polite">
+          <div class="cnt yes"><b id="cYes">0</b><span>Angenommen</span></div>
+          <div class="cnt no"><b id="cNo">0</b><span>Abgelehnt</span></div>
+          <div class="cnt open"><b id="cOpen">0</b><span>Keine Antwort</span></div>
+        </div>
+        <div class="quals" id="quals" role="group" aria-label="Nach Qualifikation filtern"></div>
+        <div id="yesBox"><h3 class="sub">Angenommen</h3><ul class="plist" id="lYes"></ul></div>
+        <div id="noBox"><h3 class="sub">Abgelehnt</h3><ul class="plist" id="lNo"></ul></div>
+        <h2 class="oe-h">Beteiligte Organisationseinheiten</h2>
+        <div class="oe-wrap"><table class="oe"><thead><tr><th>Organisationseinheit</th><th>Datum</th><th>Alarmierungszeit</th></tr></thead><tbody id="oeBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="quiet" id="quietView">
+      <div class="quiet-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>
+        <div><b>Keine Alarmierung</b><span>Bei einem Alarm erscheinen hier Einsatzdaten und Rückmeldungen der Mannschaft.</span></div>
+      </div>
+    </div>
+  </section>
+  <div class="demo">
+    <span>Vorschau: Alarmierungen und Rückmeldungen sind Beispieldaten.</span>
+    <div class="demo-btns" id="demoBtns"><button class="btn" data-demo="0">Probealarm Hausbrand</button><button class="btn" data-demo="1">Probealarm Verkehrsunfall</button><button class="btn" data-demo="2">Probealarm Industrie (Großeinsatz)</button></div>
+    <button class="btn primary" id="demoAlarm" hidden>Einsatz beenden</button>
+  </div>
+</template>
+
+<template id="tpl-navigation">
+  <section class="card">
+    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><h1>Navigation</h1></div>
+    <div id="navOn" hidden>
+      <div class="dest"><b id="nAddr"></b><span id="nCity"></span></div>
+      <div class="actions" style="margin-top:14px"><a class="btn primary" id="nGo" target="_blank" rel="noopener">Route in Google Maps öffnen</a><a class="btn" id="nEarth" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>3D-Ansicht in Google Earth</a></div>
+      <div class="m3d-wrap">
+        <div class="m3d" id="m3d"></div>
+        <p class="m3d-msg" id="m3dMsg"></p>
+        <button class="btn m3d-spin" id="m3dSpin" aria-pressed="true" hidden>Drehung anhalten</button>
+      </div>
+    </div>
+    <p class="muted" id="navOff">Keine aktive Alarmierung. Bei einem Alarm wird der Einsatzort hier automatisch als Ziel übernommen.</p>
+  </section>
+</template>
+
+<template id="tpl-chat">
+  <section class="card chat">
+    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg><h1>Chat</h1><span class="tag" id="chName"></span></div>
+    <p class="muted" id="chMembers"></p>
+    <ul class="msgs" id="msgs" aria-live="polite"></ul>
+    <div class="quick" id="quick" aria-label="Schnellnachrichten"></div>
+    <div class="compose"><input id="chIn" type="text" placeholder="Nachricht an alle Feuerwehren" autocomplete="off" enterkeyhint="send" aria-label="Nachricht"><button class="btn primary" id="chSend">Senden</button></div>
+  </section>
+</template>
+
+<template id="tpl-gefahr">
+  <section class="card">
+    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18v.01"/></svg><h1>Gefährliche Stoffe</h1></div>
+    <div class="gtabs" role="tablist" aria-label="Bereiche">
+      <button role="tab" data-gt="tafel">Warntafel</button>
+      <button role="tab" data-gt="sofort">Sofortmaßnahmen</button>
+      <button role="tab" data-gt="stoffe">Stoffe</button>
+      <button role="tab" data-gt="kennz">Kennzeichnung</button>
+      <button role="tab" data-gt="lagen">Sonderlagen</button>
+    </div>
+
+    <div class="gp" data-gp="sofort" role="tabpanel">
+      <div class="gwarn">Menschenrettung hat höchste Priorität. Solange Information fehlt, größte Gefahr annehmen!</div>
+      <p class="muted">Sofortmaßnahmen nach GAMS, möglichst gleichzeitig durchführen.</p>
+      <ol class="gams">
+        <li><span class="L">G</span><div><h3>Gefahr erkennen, Erkundung</h3><ul class="gul">
+          <li>Eigene Wahrnehmungen: Rauch, Flammen, Gasschwaden</li>
+          <li>Kennzeichnung von Behältern und Verpackungen, Gefahrzettel</li>
+          <li>Warntafel (Reiter „Warntafel“)</li>
+          <li>Beförderungspapiere, Frachtbrief, Unfallmerkblätter, Sicherheitsdatenblätter</li>
+          <li>4A-C-4E-Regel (unten)</li></ul></div></li>
+        <li><span class="L">A</span><div><h3>Absperren, Absichern</h3><ul class="gul">
+          <li>Mindestens <b>30 bis 60 m</b> von der Unfallstelle</li>
+          <li>Mehrere 100 m bis <b>1000 m</b> bei Tankbrand, Explosivstoffen und Gasen in Großbehältern</li>
+          <li>Windrichtung und Gefälle beachten</li>
+          <li>Dreifachen Brandschutz aufbauen</li></ul></div></li>
+        <li><span class="L">M</span><div><h3>Menschenrettung</h3><ul class="gul">
+          <li>Sofort durch die ersteintreffende Feuerwehr, jede Sekunde zählt</li>
+          <li>Ausreichend: Brandschutzbekleidung, Brandschutzhaube, umluftunabhängiger Atemschutz, (Chemikalien-)Schutzhandschuhe, Sicherheitsstiefel</li>
+          <li>Mit dem Wind annähern, Kontakt mit dem Stoff vermeiden</li>
+          <li>Nur unbedingt nötiges Personal, Aufenthalt so kurz wie möglich</li></ul></div></li>
+        <li><span class="L">S</span><div><h3>Spezialkräfte anfordern</h3><ul class="gul">
+          <li>Schadstoff-, Strahlenschutz- oder Deko-Stützpunkt, Fachberater, Behörde</li></ul></div></li>
+      </ol>
+
+      <details class="acc" open><summary>Absperrbereiche</summary><div class="in">
+        <svg class="gzone" viewBox="0 0 640 300" role="img" aria-label="Skizze der Absperrbereiche: Wirkzone innen, Sicherheitszone 30 bis 60 m, Deko-Platz an der inneren Absperrgrenze auf der Windseite, Bereitstellungsraum außerhalb">
+          <ellipse cx="350" cy="160" rx="285" ry="132" fill="#1E7B3A" fill-opacity=".35"/>
+          <ellipse cx="370" cy="150" rx="205" ry="92" fill="#F2C200" fill-opacity=".85"/>
+          <ellipse cx="395" cy="145" rx="95" ry="42" fill="#E5533B"/>
+          <text x="395" y="150" text-anchor="middle" fill="#FFFFFF" style="fill:#FFFFFF">Wirkzone</text>
+          <text x="370" y="225" text-anchor="middle">Sicherheitszone (mind. 30–60 m)</text>
+          <line x1="490" y1="145" x2="575" y2="145" stroke="#16181C" stroke-width="2" marker-end="url(#ga)" marker-start="url(#ga)"/>
+          <defs><marker id="ga" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#16181C"/></marker></defs>
+          <text x="532" y="135" text-anchor="middle">30–60 m</text>
+          <rect x="128" y="168" width="96" height="40" rx="6" fill="#FFFFFF" stroke="#16181C" stroke-width="1.5"/>
+          <text x="176" y="193" text-anchor="middle">Deko-Platz</text>
+          <text x="350" y="282" text-anchor="middle" class="lt">Bereitstellungsraum (außerhalb der Gefahrenzone)</text>
+          <path d="M20 60h62" stroke="currentColor" stroke-width="5"/><path d="M80 48l18 12-18 12z" fill="currentColor"/>
+          <text x="20" y="44" class="lt">Wind</text>
+        </svg>
+        <ul class="gul">
+          <li>Gefahrenzone = Wirkzone + Sicherheitszone; ihre Grenze ist die innere Absperrgrenze.</li>
+          <li>Deko-Platz an der inneren Absperrgrenze auf der windzugekehrten Seite, auf befestigtem Untergrund. Die Gefahrenzone wird nur über den Deko-Platz verlassen.</li>
+          <li>Bereitstellungsraum außerhalb, die äußere Absperrung übernimmt die Polizei.</li>
+        </ul>
+        <p class="ghint">3A-Regel: Abstand so groß, Aufenthaltszeit so kurz, Abschirmung so gut wie möglich.</p>
+      </div></details>
+
+      <details class="acc"><summary>4A-C-4E-Regel <small>Gefahren durch … für …</small></summary><div class="in">
+        <p class="muted">Zutreffende Gefahren antippen. Darunter steht, wen sie betreffen.</p>
+        <div class="tw"><table class="gt m4" id="g4"></table></div>
+        <p id="g4Out" aria-live="polite"></p>
+      </div></details>
+    </div>
+
+    <div class="gp" data-gp="tafel" role="tabpanel">
+      <div class="plate-wrap">
+        <div class="plate" role="group" aria-label="Warntafel">
+          <label class="prow"><span class="xs" id="gXs" hidden>X</span><input id="gK" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="00" autocomplete="off" enterkeyhint="next" aria-label="Gefahrnummer, obere Zahl"></label>
+          <label class="prow"><input id="gUN" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" autocomplete="off" enterkeyhint="done" aria-label="UN-Nummer, untere Zahl"></label>
+        </div>
+        <div class="gside">
+          <button class="xbtn" id="gX" aria-pressed="false" title="X vor der Gefahrnummer: reagiert gefährlich mit Wasser">X</button>
+          <button class="btn" id="gClr">Leeren</button>
+        </div>
+      </div>
+      <p class="muted">Oben die Gefahrnummer, unten die UN-Nummer eintippen. „X“ antippen, wenn es auf der Tafel vor der Gefahrnummer steht.</p>
+      <div id="gOut" aria-live="polite"></div>
+      <details class="acc"><summary>Alle Gefahrnummern</summary><div class="in"><div class="tw"><table class="gt" id="gAll"></table></div>
+        <p class="muted">*) Wasser nur im Einverständnis mit Sachverständigen einsetzen.</p></div></details>
+    </div>
+
+    <div class="gp" data-gp="stoffe" role="tabpanel">
+      <input class="gsearch" id="gQ" type="search" placeholder="Stoffname oder UN-Nummer" autocomplete="off" enterkeyhint="search" aria-label="Stoff suchen">
+      <div id="gDet"></div>
+      <ul class="slist" id="gList"></ul>
+      <details class="acc"><summary>Grenzwerte, Begriffe</summary><div class="in"><ul class="gul">
+        <li><b>MAK</b> (maximale Arbeitsplatzkonzentration): höchstzulässige Konzentration in der Luft am Arbeitsplatz bei in der Regel 8 Stunden täglich und 40 Stunden pro Woche.</li>
+        <li><b>TRK</b> (technische Richtkonzentration): für Stoffe ohne unbedenkliche Konzentration, etwa krebserregende. Senkt das Risiko, schließt es aber nicht aus. In der Stoffliste rot markiert.</li>
+        <li><b>IDLH</b>: Konzentration, unter der bei bis zu 30 Minuten Einwirkung keine bleibenden Schäden oder Lebensgefahr zu erwarten sind.</li>
+        <li><b>AEGL-1</b>: darüber vorübergehende, umkehrbare Reizungen. <b>AEGL-2</b>: darüber bleibende oder schwere Schäden, Flucht kann beeinträchtigt sein. <b>AEGL-3</b>: darüber lebensbedrohlich oder tödlich. Werte für 10 min, 30 min, 60 min, 4 h und 8 h.</li>
+        <li><b>ETW</b> (Einsatztoleranzwert): über diesem Wert grundsätzlich unter Atemschutz arbeiten. ETW-4 entspricht AEGL-2 für 4 Stunden.</li>
+      </ul></div></details>
+    </div>
+
+    <div class="gp" data-gp="kennz" role="tabpanel">
+      <h3>Klassen beim Gefahrguttransport</h3>
+      <p class="muted">Gefahrzettel sind auf der Spitze stehende Quadrate. Farbe und Symbol zeigen die Gefahr, die Ziffer unten die Klasse. Oft steht zusätzlich die UN-Nummer oder ein Text wie „FLAMMABLE LIQUID“ darauf.</p>
+      <ul class="dias" id="gKl"></ul>
+      <details class="acc"><summary>Klasse 1: Unterklassen</summary><div class="in"><div class="tw"><table class="gt">
+        <tr><th class="n">1.1</th><td>Massenexplosionsfähig: die Explosion erfasst nahezu die ganze Ladung gleichzeitig.</td></tr>
+        <tr><th class="n">1.2</th><td>Gefahr durch Splitter, Spreng- und Wurfstücke, nicht massenexplosionsfähig.</td></tr>
+        <tr><th class="n">1.3</th><td>Feuergefahr mit geringer Druck- oder Splitterwirkung, starke Strahlungswärme möglich.</td></tr>
+        <tr><th class="n">1.4</th><td>Geringe Explosionsgefahr, Wirkung bleibt im Wesentlichen auf das Versandstück beschränkt.</td></tr>
+        <tr><th class="n">1.5</th><td>Sehr unempfindlich, aber massenexplosionsfähig.</td></tr>
+        <tr><th class="n">1.6</th><td>Extrem unempfindlich, Gefahr auf einen einzelnen Gegenstand beschränkt.</td></tr>
+      </table></div><p class="muted">Zettel 1.1 bis 1.3 zeigen die explodierende Bombe, 1.4 bis 1.6 nur die Ziffer. Dazu kommt ein Buchstabe für die Verträglichkeitsgruppe, z. B. „1.1 D“.</p></div></details>
+      <details class="acc"><summary>Farbkennzeichnung von Gasflaschen</summary><div class="in">
+        <p class="muted">Maßgeblich ist nur die Farbe der Flaschenschulter. Gilt nicht für Feuerlöscher und Flüssiggasflaschen (Propan/Butan).</p>
+        <div class="tw"><table class="gt">
+          <tr><td><span class="sw" style="background:#F2C200"></span>Gelb</td><td>giftig und/oder ätzend</td></tr>
+          <tr><td><span class="sw" style="background:#C62828"></span>Rot</td><td>brennbar</td></tr>
+          <tr><td><span class="sw" style="background:#7FB8E6"></span>Hellblau</td><td>oxidierend</td></tr>
+          <tr><td><span class="sw" style="background:#3DBE4A"></span>Leuchtgrün</td><td>inert (ungiftig, nicht ätzend, nicht brennbar, nicht oxidierend)</td></tr>
+          <tr><td><span class="sw" style="background:#6B2E1E"></span>Kastanienbraun</td><td>Acetylen</td></tr>
+          <tr><td><span class="sw" style="background:#FFFFFF"></span>Weiß</td><td>Sauerstoff</td></tr>
+          <tr><td><span class="sw" style="background:#1F4E9C"></span>Blau</td><td>Lachgas</td></tr>
+          <tr><td><span class="sw" style="background:#16181C"></span>Schwarz</td><td>Stickstoff</td></tr>
+          <tr><td><span class="sw" style="background:#8A8F96"></span>Grau</td><td>Kohlendioxid</td></tr>
+          <tr><td><span class="sw" style="background:#7A5230"></span>Braun</td><td>Helium</td></tr>
+          <tr><td><span class="sw" style="background:#1E6B3A"></span>Dunkelgrün</td><td>Argon</td></tr>
+          <tr><td><span class="sw" style="background:#2AA6A6"></span>Türkisblau</td><td>Stickstoff mit Stickstoffmonoxid</td></tr>
+          <tr><td><span class="sw2"><i style="background:#F2C200"></i><i style="background:#C62828"></i></span>Gelb und Rot</td><td>giftig/ätzend und brennbar</td></tr>
+          <tr><td><span class="sw2"><i style="background:#F2C200"></i><i style="background:#7FB8E6"></i></span>Gelb und Hellblau</td><td>giftig/ätzend und oxidierend</td></tr>
+          <tr><td><span class="sw2"><i style="background:#FFFFFF"></i><i style="background:#16181C"></i></span>Weiß und Schwarz</td><td>Druckluft, Atemluft</td></tr>
+        </table></div>
+        <p class="muted">Medizinische Gase: Flaschenkörper weiß. Altbestände: weiß = Acetylen, grün = Stickstoff, grau = sonstige nicht brennbare Gase.</p>
+      </div></details>
+      <details class="acc"><summary>GHS-Piktogramme und Arbeitsschutz</summary><div class="in"><ul class="gul">
+        <li>Verpackungen von Chemikalien tragen GHS-Piktogramme (rote Raute, schwarzes Symbol) mit dem Signalwort „Gefahr“ oder „Achtung“ sowie H-Sätzen (Gefahrenhinweise) und P-Sätzen (Sicherheitshinweise).</li>
+        <li>Bis 2015 galten orange Gefahrensymbole mit Kennbuchstaben: E explosionsgefährlich, F+/F hoch/leicht entzündlich, O brandfördernd, T+/T sehr giftig/giftig, Xn gesundheitsschädlich, Xi reizend, C ätzend, N umweltgefährlich.</li>
+        <li>Warnzeichen am Arbeitsplatz sind gelbe Dreiecke mit schwarzem Rand.</li>
+      </ul></div></details>
+      <details class="acc"><summary>Begrenzte und freigestellte Mengen, Papiere</summary><div class="in"><ul class="gul">
+        <li><b>Begrenzte Mengen (LQ):</b> Versandstücke bis 30 kg brutto ohne Gefahrzettel, nur mit dem schwarz-weißen Rautenzeichen. Warntafeln am LKW erst ab bestimmten Mengen.</li>
+        <li><b>Freigestellte Mengen (EQ):</b> Kennzeichen mit Gefahrzettel-Nummer, Paketinhalt höchstens 1 l bzw. 1 kg.</li>
+        <li><b>Beförderungspapiere</b> enthalten mindestens UN-Nummer, Stoffbenennung, Klasse bzw. Gefahrzettel, ggf. Verpackungsgruppe, Anzahl der Versandstücke, Gesamtmenge, Absender, Empfänger und ggf. Tunnelbeschränkungscode.</li>
+        <li><b>Eisenbahn:</b> ein umlaufender orangefarbener Streifen kennzeichnet Kesselwagen mit verflüssigten, tiefgekühlten oder gelösten Gasen.</li>
+        <li><b>Binnenschifffahrt:</b> Gefahrgutschiffe zeigen bei Tag blaue Kegel, bei Nacht blaue Lichter.</li>
+        <li><b>Rohrleitungen</b> (ÖNORM Z 1001, nicht bindend): Grundfarbe für den Inhalt, Zusatzfarbe für die Gefahr, Pfeil für die Fließrichtung.</li>
+      </ul></div></details>
+    </div>
+
+    <div class="gp" data-gp="lagen" role="tabpanel">
+      <details class="acc"><summary>Menschenrettung, Erste Hilfe</summary><div class="in">
+        <ul class="gul">
+          <li>Lebensfunktionen prüfen, Atemwege freimachen.</li>
+          <li>Nicht ansprechbar, atmet: stabile Seitenlage, Hilfe rufen. Atmet nicht: Herz-Lungen-Wiederbelebung, Defibrillator holen lassen.</li>
+          <li>Starke Blutung: Blutstillung. Immer: Schockbekämpfung, Lagerung, warm halten, beruhigen.</li>
+        </ul>
+        <div class="gwarn">Bei Verdacht auf Kontamination keine Mund-zu-Mund-Beatmung, Taschenmaske oder Beatmungsbeutel verwenden. Bei Kontamination mit brennbaren Stoffen vor der Deko keinen Sauerstoff geben und nicht defibrillieren!</div>
+        <h3>Sofort-Deko</h3>
+        <ul class="gul">
+          <li>Schon bei Verdacht (Kontakt mit Flüssigkeit, durchgaste Kleidung), mit vorhandenem Gerät, nicht auf den Deko-Platz warten.</li>
+          <li>Kleidung entfernen (aufschneiden), betroffene Stellen mehrere Minuten mit viel sauberem Wasser spülen (C-Sprühstrahl), nicht bürsten.</li>
+          <li>Wasser nicht über saubere Körperteile laufen lassen. Person auf abgedeckte Trage, in Rettungsdecke einhüllen.</li>
+          <li>Kleidung in geschlossenem Behälter sammeln, „KONTAMINIERTES MATERIAL“ beschriften.</li>
+          <li>Ausnahmen: biologische Stoffe nur entkleiden. Mit Wasser heftig reagierende Stoffe (Klasse 4.3) zuerst trocken entfernen, hat die Reaktion schon begonnen, sofort mit viel Wasser spülen. Bei Kälte Unterkühlung beachten.</li>
+        </ul>
+        <h3>Lagerung</h3>
+        <div class="tw"><table class="gt">
+          <tr><td>Bewusstlos</td><td>Seitenlage</td></tr>
+          <tr><td>Schockzeichen, Kollapsneigung</td><td>Rückenlage, Beine hoch</td></tr>
+          <tr><td>Bauchverletzung</td><td>Beine angezogen</td></tr>
+          <tr><td>Brustkorbverletzung, Atemnot</td><td>halbsitzend</td></tr>
+          <tr><td>Arme, Beine verletzt</td><td>ruhigstellen</td></tr>
+        </table></div>
+        <h3>Übergabe an den Rettungsdienst</h3>
+        <ul class="gul">
+          <li>Kontamination ja oder vermutet, betroffene Körperstellen, Stoff und Menge, Sicherheitsdatenblatt oder Unfallmerkblatt mitgeben.</li>
+          <li>Art und Dauer der Einwirkung, eingeatmet oder verschluckt, Symptome, getroffene Maßnahmen.</li>
+          <li>Hinweis: Sofort-Deko ist keine vollständige Dekontamination. Rettungsfahrzeug lüften, Sanitätspersonal schützen.</li>
+        </ul>
+        <p class="ghint">Ein kontaminierter Verletzter ist von einer „sekundären Wirkzone“ umgeben. Eigenschutz!</p>
+      </div></details>
+
+      <details class="acc"><summary>Deko und Einsatzhygiene</summary><div class="in">
+        <h3>Standard-Deko</h3>
+        <ul class="gul">
+          <li>Deko-Platz an der inneren Absperrgrenze, windzugekehrt, befestigter Untergrund, bei Platzmangel Korridor mit Trassenband.</li>
+          <li>Ausstattung: Auffangwanne, Gerät zum Aufbringen des Dekomittels, Wasser zum Nachspülen (Sprühstrahl).</li>
+          <li>Ablauf: Schutzausrüstung mit Dekomittel reinigen (Einwirkzeit), verschleppungsfrei ablegen, bei Verdacht auf Hautkontakt sofort Personen-Deko.</li>
+          <li>Auch bei Einsätzen mit besonderer Gesundheitsgefahr, z. B. Kunststoffbränden.</li>
+        </ul>
+        <h3>Sofort-Deko bei vielen Zivilpersonen</h3>
+        <ul class="gul">
+          <li>Sammeln, beruhigen, Lage erklären, Kleidung ausziehen, Haut abspülen.</li>
+          <li>Lebensbedrohlich: Übergabe an den Rettungsdienst. Sonst Personen-Deko vor Ort oder Transport zu geeigneter Einrichtung (Dusche, Hallenbad, Turnhalle).</li>
+        </ul>
+        <h3>Einsatzhygiene</h3>
+        <ul class="gul">
+          <li>Keine Esswaren, Rauchwaren, Handy, Geldbörse oder Schmuck in den Einsatz mitnehmen.</li>
+          <li>Mit Wunden oder Hautkrankheiten keine Tätigkeiten mit Kontaminationsgefahr.</li>
+          <li>Kontaminierte Ausrüstung dicht verpacken und kennzeichnen, Fahrzeuginnenraum sauber halten.</li>
+          <li>Gesicht und Hände noch an der Einsatzstelle reinigen. Auch beim Aufräumen besteht Kontaminationsgefahr.</li>
+          <li>Bis nach der Körperreinigung nicht essen, trinken oder rauchen. Verschmutzte Kleidung nicht privat waschen.</li>
+        </ul>
+      </div></details>
+
+      <details class="acc"><summary>Strahleneinsatz</summary><div class="in">
+        <ul class="gul">
+          <li>GAMS gilt auch hier. Abstand mindestens 30 bis 60 m, Menschenrettung mit Brandschutzbekleidung und Atemschutz.</li>
+          <li>Spezialkräfte: Strahlenschutzbeauftragte, Strahlenschutzstützpunkt, Polizei, Behörde.</li>
+          <li><b>Offener</b> Stoff: Strahlung plus Kontamination und Inkorporation, Atemschutz und Deko erforderlich. <b>Umschlossener</b> Stoff: nur Strahlung.</li>
+        </ul>
+        <h3>Absperrgrenzen</h3>
+        <div class="tw"><table class="gt">
+          <tr><td>Kontamination (offener Stoff)</td><td class="n">3-facher Leerwert</td></tr>
+          <tr><td>Nur unbedingt nötige Kräfte mit Dosimeter</td><td class="n">über 100 µSv/h</td></tr>
+          <tr><td>Kräfte mit zusätzlicher Ausrüstung</td><td class="n">10 bis 100 µSv/h</td></tr>
+          <tr><td>Übrige Einsatzkräfte</td><td class="n">unter 10 µSv/h</td></tr>
+        </table></div>
+        <h3>Einsatzdosis</h3>
+        <div class="tw"><table class="gt">
+          <tr><td class="n">10 µSv</td><td>Übung</td></tr>
+          <tr><td class="n">20 mSv</td><td>Schutz von Sachwerten</td></tr>
+          <tr><td class="n">100 mSv</td><td>nur zur Abwehr akuter Gefahr für Personen oder wesentlicher Schadensausweitung</td></tr>
+          <tr><td class="n hi">250 mSv</td><td>nur zur Rettung von Menschenleben, einmal im Leben</td></tr>
+        </table></div>
+        <ul class="gul">
+          <li>Nicht einsetzen: unter 18 Jahren, nach Erreichen der Lebensdosis, mit offenen Wunden oder Hauterkrankungen, in Schwangerschaft und Stillzeit.</li>
+          <li>Personendosimeter für alle, Dosiswarner mindestens je Trupp. Aufenthaltszeit je Person aufschreiben, rasch ablösen.</li>
+          <li>Verletzung im Bereich offener Stoffe: sofort ablösen, ärztlich auf Inkorporation untersuchen.</li>
+        </ul>
+        <h3>Abschätzen der Dosisleistung in 1 m</h3>
+        <div class="calc"><label for="gTI">Transportkennzahl TI</label><input id="gTI" inputmode="decimal" placeholder="z. B. 2,5"><output id="gTIo" for="gTI">–</output></div>
+        <p class="muted">TI × 10 = Dosisleistung in 1 m in µSv/h.</p>
+        <div class="calc"><label for="gAkt">Aktivität offener Quelle</label><input id="gAkt" inputmode="decimal" placeholder="Wert"><select id="gAktU" class="calc-u" aria-label="Einheit"><option value="1">MBq</option><option value="1000">GBq</option><option value="1000000">TBq</option></select><output id="gAkto" for="gAkt gAktU">–</output></div>
+        <p class="muted">Faustformel für den ungünstigsten Fall: MBq × 0,5 = µSv/h in 1 m.</p>
+        <div class="tw"><table class="gt">
+          <thead><tr><th>Kategorie</th><th>Oberfläche</th><th>in 1 m</th><th>TI</th></tr></thead>
+          <tr><td>I-WEISS</td><td class="n">bis 5 µSv/h</td><td>–</td><td class="n">0</td></tr>
+          <tr><td>II-GELB</td><td class="n">bis 0,5 mSv/h</td><td class="n">bis 10 µSv/h</td><td class="n">bis 1</td></tr>
+          <tr><td>III-GELB</td><td class="n">bis 2 mSv/h</td><td class="n">bis 100 µSv/h</td><td class="n">bis 10</td></tr>
+          <tr><td>III-GELB, ausschließliche Verwendung</td><td class="n">bis 10 mSv/h</td><td class="n">ab 100 µSv/h</td><td class="n">über 10</td></tr>
+        </table></div>
+      </div></details>
+
+      <details class="acc"><summary>Biologische Agenzien</summary><div class="in">
+        <div class="tw"><table class="gt">
+          <thead><tr><th>Kennzeichnung</th><th>UN</th><th>Bedeutung</th></tr></thead>
+          <tr><td>Kategorie A, 606</td><td class="n">2814</td><td>ansteckungsgefährlich für Menschen</td></tr>
+          <tr><td>Kategorie A, 606</td><td class="n">2900</td><td>nur für Tiere ansteckungsgefährlich</td></tr>
+          <tr><td>Kategorie B, 606</td><td class="n">3373</td><td>diagnostische oder klinische Proben</td></tr>
+          <tr><td>Kategorie B, 606</td><td class="n">3291</td><td>klinischer oder medizinischer Abfall</td></tr>
+          <tr><td>90</td><td class="n">3245</td><td>gentechnisch veränderte Organismen, nicht infektiös, Umweltgefahr möglich</td></tr>
+        </table></div>
+        <p class="muted">Proben können mit Trockeneis (CO₂) oder flüssigem Stickstoff gekühlt sein: Erstickungs- und Erfrierungsgefahr.</p>
+        <ul class="gul">
+          <li>Früh verständigen: Spezialkräfte für Schutz und Deko, Rettungsdienst, Amtsarzt. Notarzt und Laborverantwortliche bzw. Beauftragte für biologische Sicherheit an die Einsatzstelle holen.</li>
+          <li>Nicht einsetzen mit offenen Wunden, Hautentzündung oder Krankheit. Im Gefahrenbereich so wenig Bewegung wie möglich („Stand still“).</li>
+          <li>Großräumig absperren (Quarantänebereich), Polizei sperrt außen. Verlassen und Betreten nur nach Freigabe der Behörde. Deko-Platz sofort einrichten.</li>
+          <li>Gerettete können Kontaminationsquelle sein. Betroffene trennen: bestätigter, möglicher, sicher kein Kontakt.</li>
+          <li>Ausgetretenes nicht berühren, nicht durchgehen, abdecken und feucht halten, vor Wind und Regen schützen.</li>
+          <li>Brand: kein Hochdruck und kein Strahl in den Stoff, kleine Brände mit Sand, Kalk, Soda oder Pulver, sonst passend zur Umgebung. In Bereichen RG3/RG4 vorrangig Schaum, kein Pulver, wenig Löschmittel, Zutritt nur mit Personal.</li>
+          <li>Geräte nicht selbst reinigen, Entsorgung durch Fachpersonal. Danach ärztliche Nachsorge und Dokumentation aller Eingesetzten.</li>
+        </ul>
+        <p class="ghint">Körperschutz: mindestens FFP3 mit Augenschutz oder Vollmaske mit P3-Filter, flüssigkeitsdichte Schutzkleidung, Einweghandschuhe (Nitril), Stiefel. Haut an Hals, Händen und Beinen abdecken.</p>
+        <div class="tw"><table class="gt">
+          <thead><tr><th>Erreger</th><th>Risikogruppe</th><th>Kat.</th></tr></thead>
+          <tr><td>Ebola, Lassa</td><td class="n">4</td><td>A</td></tr>
+          <tr><td>Milzbrand</td><td class="n">3</td><td>A</td></tr>
+          <tr><td>SARS, Hepatitis B und C, CJK/BSE, HIV</td><td class="n">3</td><td>B</td></tr>
+          <tr><td>Maul- und Klauenseuche</td><td class="n">2</td><td>A</td></tr>
+          <tr><td>Vogelgrippe, Hepatitis A, Cholera, E. coli, Meningitis, Salmonellen, Schweinepest, Staphylococcus aureus</td><td class="n">2</td><td>B</td></tr>
+        </table></div>
+        <p class="muted">Ab RG3 Schleusen und Unterdruck, Fenster nicht gewaltsam öffnen. Tierseuchen: Anordnungen des Amtstierarztes, keine Kräfte mit eigener Tierhaltung einsetzen.</p>
+      </div></details>
+
+      <details class="acc"><summary>Elektrizität, Photovoltaik</summary><div class="in">
+        <div class="tw"><table class="gt">
+          <thead><tr><th>Mindestabstand</th><th>bis 1 kV</th><th>über 1 kV bis 380 kV</th></tr></thead>
+          <tr><td>Sprühstrahl, Pulver, Löschgase (Strahlrohr bis 12 mm, bis 200 l/min)</td><td class="n">1 m</td><td class="n">5 m</td></tr>
+          <tr><td>Vollstrahl (Strahlrohr bis 12 mm, bis 200 l/min)</td><td class="n">5 m</td><td class="n">10 m</td></tr>
+          <tr><td>Wasserwerfer Sprühstrahl</td><td>–</td><td class="n">10 m</td></tr>
+          <tr><td>Wasserwerfer Vollstrahl</td><td>–</td><td class="n">35 m</td></tr>
+          <tr><td>Tragbare Feuerlöscher</td><td class="n">1 m</td><td>–</td></tr>
+          <tr><td>Annäherung mit Fahrzeugen und Geräten</td><td class="n">1 m</td><td class="n">3 m (bis 30 kV), 5 m (bis 380 kV)</td></tr>
+          <tr><td>Herabhängende oder am Boden liegende Leitung</td><td class="n">1 m</td><td class="n hi">20 m (Schrittspannung)</td></tr>
+        </table></div>
+        <p class="muted">Gilt bei beliebiger Löschwasserqualität. Wurfweite von Hohlstrahlrohren bestmöglich nutzen. Über 1 kV: Schaumverbot. Jeden Einsatz rasch dem Netzbetreiber melden.</p>
+        <ul class="gul">
+          <li>Niederspannung: nur Holzmaste, Abstand 40 bis 60 m, 4 bis 5 Leiterseile, faustgroße Isolatoren, Hausanschlüsse.</li>
+          <li>Hochspannung bis 30 kV: Holz-, Stahlgitter- oder Betonmaste, Abstand 50 bis 100 m, 3 oder 6 Seile, kopfgroße Isolatoren.</li>
+          <li>30 bis 380 kV: Stahlgitter- oder Betonmaste, Abstand 200 bis 400 m, Isolatorketten, Blitzseil an der Mastspitze.</li>
+        </ul>
+        <h3>Photovoltaik</h3>
+        <ul class="gul">
+          <li>Bis 1000 V Gleichspannung, solange Licht einfällt, auch von Scheinwerfern. Immer von Spannung ausgehen.</li>
+          <li>Mit Löschen und Retten unabhängig vom Schaltzustand beginnen, Abstände wie oben einhalten.</li>
+          <li>Schaum nur bei absolut spannungsfreier Anlage. Module können sich lösen und abstürzen.</li>
+          <li>Netzbetreiber oder Anlagenbetreiber verständigen. Inselanlagen speichern in Akkus.</li>
+        </ul>
+      </div></details>
+
+      <details class="acc"><summary>Einsatz im Gleisbereich</summary><div class="in">
+        <div class="gwarn">Gleis erst betreten, wenn das Anhalten aller Fahrten bestätigt ist. Bremsweg bis 2000 m!</div>
+        <ul class="gul">
+          <li>Gefahren: Züge bis 230 km/h, Oberleitung 15 kV (4,95 bis 6,00 m über Schiene), Umgehungs- und Verstärkungsleitungen bis 110 kV werden nicht automatisch mit abgeschaltet.</li>
+          <li>Einsatzstelle über Kilometer und Hektometer auf Masten und Hektometersteinen beschreiben.</li>
+          <li>Abschalten und Erdung über die Notfallleitstelle veranlassen. Eine Erdungsstange zeigt nur die Spannungsfreiheit der Oberleitung.</li>
+          <li>Mindestabstand zur Oberleitung 3 m, zu herabhängenden Leitungen 20 m.</li>
+          <li>Notfall ohne Bestätigung: Sicherungsposten in beiden Richtungen 2000 m entfernt, mit Funk und Gefahrsignal (kreisförmiges Schwingen von Fahne, Gegenstand oder Arm, nachts rote Lampe), seitlich mindestens 3 m zum Gleis.</li>
+          <li>Nach bestätigter Abschaltung und Erdung bei unbeschädigter Oberleitung: Posten zur Überwachung der Erdung, dann auch Arbeiten im Bereich der geerdeten Oberleitung.</li>
+          <li>Waggons gegen Entrollen sichern (Handbremse, Hemmschuh). Heizkupplung 1000 V, Steuerkabel 24 V, Luftleitungen 10 bzw. 5 bar.</li>
+        </ul>
+        <div class="tw"><table class="gt">
+          <thead><tr><th>ÖBB-Notfallleitstelle</th><th>zuständig</th><th>Telefon</th></tr></thead>
+          <tr><td>Ost (Wien)</td><td>W, NÖ, B</td><td><a class="gtel" href="tel:+43517787177">05 1778 77177</a></td></tr>
+          <tr><td>Süd (Villach)</td><td>K, Stmk</td><td><a class="gtel" href="tel:+43517787277">05 1778 77277</a></td></tr>
+          <tr><td>West (Innsbruck)</td><td>T, Vbg</td><td><a class="gtel" href="tel:+43517787377">05 1778 77377</a></td></tr>
+          <tr><td>Mitte (Salzburg)</td><td>Sbg</td><td><a class="gtel" href="tel:+43517787477">05 1778 77477</a></td></tr>
+          <tr><td>Nord (Linz)</td><td>OÖ</td><td><a class="gtel" href="tel:+43517787577">05 1778 77577</a></td></tr>
+        </table></div>
+      </div></details>
+
+      <details class="acc"><summary>Fahrzeuge mit Alternativantrieb</summary><div class="in">
+        <ul class="gul">
+          <li>Brandbekämpfung aus der Distanz beginnen, Atemschutz auch im Freien, gegen Stäube mindestens FFP3.</li>
+          <li>Gefahrenbereiche: Druckentlastung von Gasbehältern, Hochvoltbatterien (über 800 V möglich), Hochvoltkabel, Superkondensatoren, Airbags und Gurtstraffer, aktive Motorhaube, Stoßdämpfer, Leichtmetalle (Metallbrand).</li>
+          <li>Möglich: Diesel, Benzin, Ethanol, Methanol, Flüssiggas, Erdgas (200 bar), Wasserstoff (900 bar oder tiefkalt). Hinweise des Herstellers (Rettungsdatenblatt) beachten.</li>
+          <li>Kennzeichnung nach ISO 17840-4 (derzeit freiwillig, vor allem Busse und Nutzfahrzeuge): Symbole 15 × 20 cm an beiden Seiten, Front, Heck und Dach. Details: ÖBFV-Info E-20.</li>
+          <li>Infektionsgefahr durch Blut: Einweghandschuhe.</li>
+        </ul>
+        <h3>Erdgastankstelle</h3>
+        <ul class="gul">
+          <li>Gas bis 300 bar verdichtet, Verdichter und Speicher in versperrtem Container. NOT-AUS hat Vorrang, bei öffentlichen Tankstellen immer im Kassenbereich.</li>
+          <li>Zuleitung: Hochdruck bis etwa 80 bar, Mitteldruck 100 mbar bis 1 bar, Niederdruck bis 100 mbar.</li>
+          <li>Gasnotruf: <a class="gtel" href="tel:128">128</a></li>
+        </ul>
+      </div></details>
+
+      <details class="acc"><summary>Flugunfall Kleinflugzeug</summary><div class="in">
+        <div class="gwarn">Ballistischer Rettungsfallschirm möglich: Gefahrenzone 100 m Radius, Sperrzone 30 m in Abschussrichtung. Zugang nur seitlich außerhalb der Abschussrichtung, Vorsicht vor Propeller und Turbine.</div>
+        <div class="tw"><table class="gt">
+          <tr><th>F</th><td>Feststellen der Gefahren</td></tr>
+          <tr><th>L</th><td>Lage der Gefahren feststellen und sichern</td></tr>
+          <tr><th>U</th><td>Unterstützung: Hotline der Sicherheitsuntersuchungsstelle (24/7) <a class="gtel" href="tel:+43171162657700">+43 1 71162-657700</a></td></tr>
+          <tr><th>G</th><td>Gefahrenbereich und Raumordnung festlegen: Gefahrenzonen, Verletztensammelpunkt, Hubschrauberlandeplatz, Zufahrten, Bereitstellungsraum</td></tr>
+          <tr><th>Z</th><td>Zugang festlegen</td></tr>
+          <tr><th>E</th><td>Entschärfungsdienst anfordern (<a class="gtel" href="tel:133">133</a>)</td></tr>
+          <tr><th>U</th><td>Unnötige Veränderungen vermeiden</td></tr>
+          <tr><th>G</th><td>Gefahrenabwehr: Brandbekämpfung, Menschenrettung</td></tr>
+        </table></div>
+      </div></details>
+    </div>
+
+    <p class="gsrc">Grundlage: Blattler „Gefährliche Stoffe“, Stand Dezember 2022, Link-Update August 2023. Ersetzt keine Fachberatung.</p>
+  </section>
+</template>
+
+<template id="tpl-bericht">
+  <section class="card">
+    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg><h1>Einsatzbericht</h1></div>
+    <p class="lead">Dokumentationsblatt zum Einsatz ausfüllen, unterschreiben und als PDF drucken. Frühere Berichte sind dort ebenfalls abrufbar.</p>
+    <div class="actions"><a class="btn primary" href="https://claude.ai/artifact/7zZ6YCmMroBLocYMafEugh" target="_blank" rel="noopener">Einsatzbericht öffnen</a></div>
+  </section>
+  <section class="card">
+    <h2>Letzte Einsätze</h2>
+    <ul class="list" id="recent"></ul>
+  </section>
+</template>
+
+<template id="tpl-atemschutz">
+  <div class="ats" id="atsWrap">
+    <section class="card">
+      <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 13l3-3M10 2h4"/></svg><h1>Atemschutzüberwachung</h1><button class="btn" data-ats="add">+ Trupp</button><button class="btn" data-ats="new">Neuer Einsatz</button></div>
+      <div class="ats-meta">
+        <label class="fld">Datum<input type="date" data-m="datum"></label>
+        <label class="fld">Einsatzadresse/-ort<input type="text" data-m="adresse"></label>
+        <label class="fld">Bearbeiter<input type="text" data-m="bearbeiter"></label>
+      </div>
+      <details class="ats-set"><summary>Einstellungen Überwachung</summary>
+        <div class="ats-setg">
+          <label class="fld">Max. Einsatzzeit (Min.)<input type="number" inputmode="numeric" min="1" data-s="max"></label>
+          <label class="fld">Druckkontrolle nach (Min.)<input type="number" inputmode="numeric" min="1" data-s="kontrolle"></label>
+          <label class="fld">Gelb ab Restzeit (%)<input type="number" inputmode="numeric" min="1" max="99" data-s="gelb"></label>
+          <label class="fld">Rot blinkend ab Restzeit (%)<input type="number" inputmode="numeric" min="1" max="99" data-s="rot"></label>
+        </div>
+        <p class="muted" style="margin-top:8px">Vorgabewerte sind Platzhalter – bitte an die Atemschutz-Dienstanweisung anpassen. Vorschau: Die Zeit läuft beschleunigt, 1 Sekunde entspricht 1 Minute.</p>
+      </details>
+    </section>
+    <div class="ats-grid" id="atsGrid"></div>
+    <datalist id="atsCrew"></datalist>
+  </div>
+</template>
+
+<template id="tpl-geplant">
+  <section class="card">
+    <div class="page-head"><span id="pIcon"></span><h1 id="pTitle"></h1><span class="tag">Geplant</span></div>
+    <p class="lead" id="pText"></p>
+  </section>
+</template>
+
+<script>
+const APP_VERSION="0.17.0";
+
+/* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
+const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
+const $=s=>document.querySelector(s);
+document.querySelectorAll(".ver").forEach(e=>e.textContent="v"+APP_VERSION);
+
+const I={
+ alarm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17V11a6 6 0 0 1 12 0v6"/><path d="M4 17h16v3H4zM12 2v2M4.2 5.2l1.4 1.4M19.8 5.2l-1.4 1.4"/></svg>',
+ navi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+ hydrant:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M9 21V9h6v12M8 9h8M10 9V6a2 2 0 0 1 4 0v3M6 13h3M15 13h3"/></svg>',
+ gefahr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18v.01"/></svg>',
+ ats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 13l3-3M10 2h4"/></svg>',
+ fzg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15h12V8H3zM15 11h3l3 3v1h-6"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5h11M9 12h11M9 19h11"/><path d="m3 5 1.5 1.5L7 4M3 12l1.5 1.5L7 11M3 19l1.5 1.5L7 18"/></svg>',
+ bericht:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>'};
+
+/* Menü in Einsatz-Reihenfolge: Alarmierung zuerst, Einsatzbericht zum Abschluss.
+   need(Art, Stufe): ob der Punkt bei diesem Einsatz standardmäßig angezeigt wird. Ohne Alarm ist alles sichtbar. */
+const VIEWS=[
+ {id:"alarmierung",t:"Alarmierung",sub:"mit Rückmeldungen",i:"alarm",cls:"main",tpl:"alarmierung"},
+ {id:"navigation",t:"Navigation",i:"navi",tpl:"navigation",tool:true,need:()=>true},
+ {id:"chat",t:"Chat",sub:"mit anderen Feuerwehren",i:"chat",tpl:"chat",tool:true,need:(a,l,al)=>al.units.includes(",")},
+ {id:"hydranten",t:"Hydrantenplan",i:"hydrant",tool:true,need:(a,l)=>a==="B"&&l>=2,text:"Hydranten im Einsatzgebiet auf einer Karte, mit den nächstgelegenen zum Einsatzort."},
+ {id:"gefahrstoffe",t:"Gefährliche Stoffe",i:"gefahr",tool:true,need:(a,l)=>a==="S"||(a==="B"&&l>=3)||(a==="T"&&l>=2),tpl:"gefahr"},
+ {id:"atemschutz",t:"Atemschutzüberwachung",i:"ats",tool:true,need:(a,l)=>(a==="B"&&l>=1)||(a==="S"&&l>=2)||(a==="T"&&l>=3),tpl:"atemschutz"},
+ {id:"fahrzeuge",t:"Fahrzeuge & Beladung",i:"fzg",tool:true,need:(a,l)=>a==="T"||a==="S"||(a==="B"&&l>=3),text:"Beladepläne der Fahrzeuge: wo welches Gerät verlastet ist."},
+ {id:"checklisten",t:"Checklisten",i:"check",tool:true,need:()=>true,text:"Abläufe zum Abhaken für häufige Einsatzarten."},
+ {id:"einsatzbericht",t:"Einsatzbericht",sub:"Abschluss",i:"bericht",cls:"final",tpl:"bericht"}];
+
+
+
+/* Beispieldaten */
+const AS={B:{c:["#F9D9CC","#F4B09A","#EE8466","#E5533B","#B5121B"]},S:{c:["#FFF8D6","#FFF1A3","#FFE96B","#FFE000","#E0BE00"]},T:{c:["#DCD9EE","#ADA8D3","#7E79B8","#4B4699","#2E3192"]}};
+const inkOn=hex=>{const n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;return (0.299*r+0.587*g+0.114*b)/255>0.55?"#15181C":"#FFFFFF";};
+const demoAlarms=[
+ {a:"B",l:3,what:"Brand Wohnhaus",street:"Hauptstraße 12",city:"2325 Velm",text:"Rauch aus Dachstuhl, Personen laut Anrufer im Freien",units:"FF Velm, FF Himberg, FF Pellendorf",first:2},
+ {a:"T",l:2,what:"Verkehrsunfall",street:"B15 Höhe Kreisverkehr",city:"2325 Velm",text:"PKW gegen Baum, eine Person eingeklemmt",units:"FF Velm, FF Himberg",first:2},
+ {a:"B",l:4,what:"Brand Industriebetrieb",street:"Gewerbestraße 8",city:"2325 Velm",text:"Vollbrand Lagerhalle, starke Rauchentwicklung, Gefahrstofflager betroffen, eine Person vermisst",units:"FF Velm, FF Himberg, FF Pellendorf, FF Gutenhof, FF Zwölfaxing, FF Moosbrunn, FF Schwechat",first:4}];
+const recent=[{a:"T",l:1,what:"Fahrzeugbergung",where:"Hauptstraße",when:"03.11.2026"},{a:"B",l:1,what:"Brandverdacht",where:"Feldweg Richtung Gutenhof",when:"28.10.2026"},{a:"S",l:1,what:"CO-Alarm",where:"Kirchengasse",when:"19.10.2026"}];
+const crew=[["Andreas Berger",["GK","ATS"]],["Thomas Huber",["MA","C"]],["Stefan Wagner",["ATS"]],["Markus Gruber",["ATS","C"]],["Lukas Bauer",["ATS"]],
+ ["Michael Steiner",["MA","C"]],["Daniel Hofer",["GK"]],["Florian Pichler",["ATS"]],["Julia Mayer",["ATS"]],["Christian Moser",["C"]],
+ ["Patrick Leitner",["ATS","MA"]],["Martin Fuchs",[]],["Sabine Eder",[]],["Johannes Schwarz",["ATS"]],["Manuel Weber",["MA"]],
+ ["Klaus Schmid",["GK","C"]],["Sebastian Wolf",[]],["Tobias Lang",["ATS"]]];
+const QN={ATS:"Atemschutz",MA:"Maschinisten",GK:"Gruppenkommandanten",C:"Lenker C"};
+const fmtT=d=>d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+
+/* Zustand */
+let qf=null,alarm=null,alarmStart=0,resp=[],respTimer=0,clock=0,demoIdx=0,view="alarmierung";
+
+/* Menü links, an den Einsatz angepasst */
+let extra=new Set(),moreOpen=false,unread=0,chatTimers=[],chatAlarm=[];
+const ME="FF Velm";
+let chatGeneral=[{from:"FF Himberg",text:"Übung am Samstag findet wie geplant statt.",t:new Date(Date.now()-1728e5)},{from:ME,me:true,text:"Danke, wir kommen mit 2 Fahrzeugen.",t:new Date(Date.now()-1692e5)}];
+const vis=v=>!alarm||!v.need||v.need(alarm.a,alarm.l,alarm)||extra.has(v.id);
+function navBtn(v){const cur=v.id===view?' aria-current="page"':"";let bd="";
+ if(v.id==="alarmierung"&&alarm){const c=AS[alarm.a].c[alarm.l];bd=`<span class="badge" style="background:${c};color:${inkOn(c)}">${alarm.a}${alarm.l}</span>`;}
+ if(v.id==="atemschutz"&&atsAlarmN)bd=`<span class="unread" aria-label="${atsAlarmN} Trupp(s) mit Warnung">${atsAlarmN}</span>`;
+ if(v.id==="chat"&&unread)bd=`<span class="unread" aria-label="${unread} ungelesen">${unread}</span>`;
+ return `<button class="nav-i ${v.cls||""}" data-v="${v.id}"${cur}>${I[v.i]}<span class="lbl">${v.t}${v.sub?`<small>${v.sub}</small>`:""}</span>${bd}</button>`;}
+function renderSide(){
+ const tools=VIEWS.filter(v=>v.tool),shown=tools.filter(vis),hidden=tools.filter(v=>!vis(v));
+ let h=navBtn(VIEWS[0])+'<div class="sep" role="presentation"></div>';
+ if(alarm)h+=`<div class="side-hint">Passend zu ${alarm.a}${alarm.l}</div>`;
+ h+=shown.map(navBtn).join("");
+ if(alarm&&hidden.length){
+  h+=`<button class="nav-i more" data-more aria-expanded="${moreOpen}"><span class="lbl">${moreOpen?"Weniger anzeigen":"Weitere Punkte hinzufügen ("+hidden.length+")"}</span></button>`;
+  if(moreOpen)h+=hidden.map(v=>`<button class="nav-i add" data-add="${v.id}">${I[v.i]}<span class="lbl">${v.t}</span><span class="plus" aria-hidden="true">+</span></button>`).join("");}
+ h+='<div class="sep" role="presentation"></div>'+navBtn(VIEWS[VIEWS.length-1])+'<div class="side-foot">Made by Felix Horak<br><span class="ver">v'+APP_VERSION+'</span></div>';
+ $("#side").innerHTML=h;}
+
+/* Ansichten */
+function show(id){
+ const v=VIEWS.find(x=>x.id===id)||VIEWS[0];view=v.id;
+ if(alarm&&v.tool&&!vis(v))extra.add(v.id);
+ if(v.id==="chat")unread=0;
+ renderSide();
+ const m=$("#main");m.innerHTML="";
+ m.appendChild($("#tpl-"+(v.tpl||"geplant")).content.cloneNode(true));
+ m.insertAdjacentHTML("beforeend",'<div class="foot-m">Made by Felix Horak, v'+APP_VERSION+'</div>');
+ if(!v.tpl){$("#pIcon").innerHTML=I[v.i];$("#pTitle").textContent=v.t;$("#pText").textContent=v.text;}
+ if(v.id==="alarmierung")initAlarmView();
+ if(v.id==="navigation")renderNav();
+ if(v.id==="einsatzbericht")renderRecent();
+ if(v.id==="chat")initChat();
+ if(v.id==="gefahrstoffe")initGef();
+ if(v.id==="atemschutz")initAts();
+ if(location.hash.slice(1)!==v.id)history.replaceState(null,"","#"+v.id);
+ scrollTo({top:0});
+}
+document.addEventListener("click",e=>{
+ const a=e.target.closest("[data-add]");if(a){extra.add(a.dataset.add);moreOpen=false;show(a.dataset.add);return;}
+ const m=e.target.closest("[data-more]");if(m){moreOpen=!moreOpen;renderSide();return;}
+ const b=e.target.closest(".nav-i[data-v]");if(b)show(b.dataset.v);});
+addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h&&h!==view)show(h);});
+
+function renderRecent(){
+ $("#recent").innerHTML=recent.map(r=>{const c=AS[r.a].c[r.l];return `<li><span class="as" style="background:${c};color:${inkOn(c)}">${r.a}${r.l}</span><div><b>${r.what}</b><span>${r.where}</span></div><time>${r.when}</time></li>`}).join("");
+}
+/* Gefährliche Stoffe: Grundlage Blattler „Gefährliche Stoffe“ (Stand 12/2022, Link-Update 08/2023), offline */
+const KD={"2":"Entweichen von Gas durch Druck oder chemische Reaktion","3":"Entzündbarkeit von flüssigen Stoffen (Dämpfen) und Gasen oder selbsterhitzungsfähiger flüssiger Stoff","4":"Entzündbarkeit fester Stoffe oder selbsterhitzungsfähiger fester Stoff","5":"Oxidierende (brandfördernde) Wirkung","6":"Giftigkeit oder Ansteckungsgefahr","7":"Radioaktivität","8":"Ätzwirkung","9":"Gefahr einer spontanen heftigen Reaktion"};
+const KS={"20":"Erstickendes Gas oder Gas ohne Zusatzgefahr","22":"Tiefgekühlt verflüssigtes Gas, erstickend","223":"Tiefgekühlt verflüssigtes Gas, entzündbar","225":"Tiefgekühlt verflüssigtes Gas, oxidierend (brandfördernd)","23":"Entzündbares Gas","239":"Entzündbares Gas, das spontan zu einer heftigen Reaktion führen kann","25":"Oxidierendes (brandförderndes) Gas","26":"Giftiges Gas","263":"Giftiges Gas, entzündbar","265":"Giftiges Gas, oxidierend (brandfördernd)","268":"Giftiges Gas, ätzend","28":"Ätzendes Gas",
+ "30":"Entzündbarer flüssiger Stoff (Flammpunkt 23 bis 60 °C), auf oder über den Flammpunkt erwärmter Stoff mit Flammpunkt über 60 °C oder selbsterhitzungsfähiger flüssiger Stoff","323":"Entzündbarer flüssiger Stoff, der mit Wasser reagiert und entzündbare Gase bildet","X323":"Entzündbarer flüssiger Stoff, der mit Wasser gefährlich reagiert und entzündbare Gase bildet","33":"Leicht entzündbarer flüssiger Stoff (Flammpunkt unter 23 °C)","333":"Selbstentzündlicher (pyrophorer) flüssiger Stoff","X333":"Pyrophorer flüssiger Stoff, der mit Wasser gefährlich reagiert","336":"Leicht entzündbarer flüssiger Stoff, giftig","338":"Leicht entzündbarer flüssiger Stoff, ätzend","X338":"Leicht entzündbarer flüssiger Stoff, ätzend, der mit Wasser gefährlich reagiert","339":"Leicht entzündbarer flüssiger Stoff, der spontan zu einer heftigen Reaktion führen kann","36":"Entzündbarer flüssiger Stoff (Flammpunkt 23 bis 60 °C), schwach giftig, oder selbsterhitzungsfähiger flüssiger Stoff, giftig","362":"Entzündbarer flüssiger Stoff, giftig, der mit Wasser reagiert und entzündbare Gase bildet","X362":"Entzündbarer flüssiger Stoff, giftig, der mit Wasser gefährlich reagiert und entzündbare Gase bildet","368":"Entzündbarer flüssiger Stoff, giftig, ätzend","38":"Entzündbarer flüssiger Stoff (Flammpunkt 23 bis 60 °C), schwach ätzend, oder selbsterhitzungsfähiger flüssiger Stoff, ätzend","382":"Entzündbarer flüssiger Stoff, ätzend, der mit Wasser reagiert und entzündbare Gase bildet","X382":"Entzündbarer flüssiger Stoff, ätzend, der mit Wasser gefährlich reagiert und entzündbare Gase bildet","39":"Entzündbarer flüssiger Stoff, der spontan zu einer heftigen Reaktion führen kann",
+ "40":"Entzündbarer fester Stoff, selbsterhitzungsfähiger, selbstzersetzlicher oder polymerisierender Stoff","423":"Fester Stoff (auch entzündbar oder selbsterhitzungsfähig), der mit Wasser reagiert und entzündbare Gase bildet","X423":"Fester Stoff (auch entzündbar oder selbsterhitzungsfähig), der mit Wasser gefährlich reagiert und entzündbare Gase bildet","43":"Selbstentzündlicher (pyrophorer) fester Stoff","X432":"Pyrophorer fester Stoff, der mit Wasser gefährlich reagiert und entzündbare Gase bildet","44":"Entzündbarer fester Stoff, bei erhöhter Temperatur geschmolzen","446":"Entzündbarer fester Stoff, giftig, bei erhöhter Temperatur geschmolzen","46":"Entzündbarer oder selbsterhitzungsfähiger fester Stoff, giftig","462":"Fester Stoff, giftig, der mit Wasser reagiert und entzündbare Gase bildet","X462":"Fester Stoff, der mit Wasser gefährlich reagiert und giftige Gase bildet","48":"Entzündbarer oder selbsterhitzungsfähiger fester Stoff, ätzend","482":"Fester Stoff, ätzend, der mit Wasser reagiert und entzündbare Gase bildet","X482":"Fester Stoff, der mit Wasser gefährlich reagiert und ätzende Gase bildet",
+ "50":"Oxidierender (brandfördernder) Stoff","539":"Entzündbares organisches Peroxid","55":"Stark oxidierender (brandfördernder) Stoff","556":"Stark oxidierender Stoff, giftig","558":"Stark oxidierender Stoff, ätzend","559":"Stark oxidierender Stoff, der spontan zu einer heftigen Reaktion führen kann","56":"Oxidierender Stoff, giftig","568":"Oxidierender Stoff, giftig, ätzend","58":"Oxidierender Stoff, ätzend","59":"Oxidierender Stoff, der spontan zu einer heftigen Reaktion führen kann",
+ "60":"Giftiger oder schwach giftiger Stoff","606":"Ansteckungsgefährlicher Stoff","623":"Giftiger flüssiger Stoff, der mit Wasser reagiert und entzündbare Gase bildet","63":"Giftiger Stoff, entzündbar (Flammpunkt 23 bis 60 °C)","638":"Giftiger Stoff, entzündbar (Flammpunkt 23 bis 60 °C), ätzend","639":"Giftiger Stoff, entzündbar (Flammpunkt bis 60 °C), der spontan zu einer heftigen Reaktion führen kann","64":"Giftiger fester Stoff, entzündbar oder selbsterhitzungsfähig","642":"Giftiger fester Stoff, der mit Wasser reagiert und entzündbare Gase bildet","65":"Giftiger Stoff, oxidierend (brandfördernd)","66":"Sehr giftiger Stoff","663":"Sehr giftiger Stoff, entzündbar (Flammpunkt bis 60 °C)","664":"Sehr giftiger fester Stoff, entzündbar oder selbsterhitzungsfähig","665":"Sehr giftiger Stoff, oxidierend (brandfördernd)","668":"Sehr giftiger Stoff, ätzend","X668":"Sehr giftiger Stoff, ätzend, der mit Wasser gefährlich reagiert","669":"Sehr giftiger Stoff, der spontan zu einer heftigen Reaktion führen kann","68":"Giftiger Stoff, ätzend","69":"Giftiger oder schwach giftiger Stoff, der spontan zu einer heftigen Reaktion führen kann",
+ "70":"Radioaktiver Stoff","768":"Radioaktiver Stoff, giftig, ätzend","78":"Radioaktiver Stoff, ätzend",
+ "80":"Ätzender oder schwach ätzender Stoff","X80":"Ätzender oder schwach ätzender Stoff, der mit Wasser gefährlich reagiert","823":"Ätzender flüssiger Stoff, der mit Wasser reagiert und entzündbare Gase bildet","83":"Ätzender oder schwach ätzender Stoff, entzündbar (Flammpunkt 23 bis 60 °C)","X83":"Ätzender oder schwach ätzender Stoff, entzündbar (Flammpunkt 23 bis 60 °C), der mit Wasser gefährlich reagiert","839":"Ätzender oder schwach ätzender Stoff, entzündbar (Flammpunkt 23 bis 60 °C), der spontan zu einer heftigen Reaktion führen kann","X839":"Ätzender oder schwach ätzender Stoff, entzündbar (Flammpunkt 23 bis 60 °C), spontan heftig reagierend und mit Wasser gefährlich reagierend","84":"Ätzender fester Stoff, entzündbar oder selbsterhitzungsfähig","842":"Ätzender fester Stoff, der mit Wasser reagiert und entzündbare Gase bildet","85":"Ätzender oder schwach ätzender Stoff, oxidierend (brandfördernd)","856":"Ätzender oder schwach ätzender Stoff, oxidierend und giftig","86":"Ätzender oder schwach ätzender Stoff, giftig","88":"Stark ätzender Stoff","X88":"Stark ätzender Stoff, der mit Wasser gefährlich reagiert","883":"Stark ätzender Stoff, entzündbar (Flammpunkt 23 bis 60 °C)","884":"Stark ätzender fester Stoff, entzündbar oder selbsterhitzungsfähig","885":"Stark ätzender Stoff, oxidierend (brandfördernd)","886":"Stark ätzender Stoff, giftig","X886":"Stark ätzender Stoff, giftig, der mit Wasser gefährlich reagiert","89":"Ätzender oder schwach ätzender Stoff, der spontan zu einer heftigen Reaktion führen kann",
+ "90":"Umweltgefährdender Stoff oder verschiedene gefährliche Stoffe","99":"Verschiedene gefährliche Stoffe in erwärmtem Zustand"};
+const UN={"1001":["Acetylen, gelöst","2","239"],"1005":["Ammoniak, wasserfrei","2","268"],"1011":["Butan","2","23"],"1013":["Kohlendioxid","2","20"],"1017":["Chlor","2","265"],
+ "1049":["Wasserstoff, verdichtet","2","23"],"1066":["Stickstoff, verdichtet","2","20"],"1072":["Sauerstoff, verdichtet","2","25"],"1073":["Sauerstoff, tiefgekühlt, flüssig","2","225"],
+ "1075":["Petroleumgase, verflüssigt (Flüssiggas)","2","23"],"1090":["Aceton","3","33"],"1170":["Ethanol","3"],"1202":["Dieselkraftstoff, Gasöl oder Heizöl, leicht","3","30"],
+ "1203":["Benzin (Ottokraftstoff)","3","33"],"1223":["Kerosin","3","30"],"1230":["Methanol","3","336"],"1267":["Erdöl, roh (Rohöl)","3"],"1268":["Erdöldestillate, n.a.g.","3"],
+ "1760":["Ätzender flüssiger Stoff, n.a.g.","8"],"1789":["Chlorwasserstoffsäure (Salzsäure)","8","80"],"1791":["Hypochloritlösung","8","80"],"1824":["Natriumhydroxidlösung (Natronlauge)","8","80"],
+ "1830":["Schwefelsäure","8","80"],"1831":["Schwefelsäure, rauchend (Oleum)","8","X886"],"1863":["Düsenkraftstoff","3"],"1965":["Kohlenwasserstoffgas, Gemisch, verflüssigt (z. B. Propan/Butan)","2","23"],"1971":["Methan oder Erdgas, verdichtet","2","23"],
+ "1972":["Methan oder Erdgas, tiefgekühlt, flüssig (LNG)","2","223"],"1977":["Stickstoff, tiefgekühlt, flüssig","2","22"],"1978":["Propan","2","23"],"1993":["Entzündbarer flüssiger Stoff, n.a.g.","3"],
+ "2014":["Wasserstoffperoxid, wässrige Lösung","5.1","58"],"2031":["Salpetersäure","8"],"2187":["Kohlendioxid, tiefgekühlt, flüssig","2","22"],"2672":["Ammoniaklösung","8","80"],"2794":["Batterien, nass, gefüllt mit Säure","8"],
+ "2814":["Ansteckungsgefährlicher Stoff, gefährlich für Menschen (Kategorie A)","6.2","606"],"2900":["Ansteckungsgefährlicher Stoff, nur gefährlich für Tiere (Kategorie A)","6.2","606"],"3245":["Genetisch veränderte Mikroorganismen","9","90"],"3291":["Klinischer Abfall (Kategorie B)","6.2","606"],"3373":["Biologischer Stoff, Kategorie B (diagnostische Proben)","6.2","606"],
+ "3077":["Umweltgefährdender Stoff, fest, n.a.g.","9","90"],"3082":["Umweltgefährdender Stoff, flüssig, n.a.g.","9","90"],"3090":["Lithium-Metall-Batterien","9"],"3091":["Lithium-Metall-Batterien in Ausrüstung","9"],"3257":["Erwärmter flüssiger Stoff, n.a.g. (z. B. Bitumen)","9","99"],"3480":["Lithium-Ionen-Batterien","9"],"3481":["Lithium-Ionen-Batterien in Ausrüstung","9"]};
+const HT={F:["h-F","entzündbar"],T:["h-T","giftig"],C:["h-C","ätzend"],O:["h-O","brandfördernd"]};
+const CK={
+ flg:{t:"Flüssiggas",ref:"ÖBFV-Info E-06",gef:["Explosions- und Brandgefahr","Behälterzerknall (BLEVE)","Erfrierungen beim Austritt der Flüssigphase"],
+  mas:["Behälter kühlen (BLEVE)","Eindringen in tiefer liegende Bereiche (Keller, Kanäle) verhindern","Flüssiggas-Lachen mit Mittelschaum abdecken"],warn:"Wasser auf Flüssiggas fördert die Verdampfung!",
+  extra:'<p class="muted">1 kg Flüssiggas entspricht etwa 2 l Flüssigphase, daraus werden etwa 500 l Gas und rund 30.000 l zündfähiges Gas-Luft-Gemisch.</p><h3>BLEVE</h3><p class="ghint">Behälter aus der Deckung intensiv kühlen. Rückzug, sobald das Sicherheitsventil zum ersten Mal anspricht! Feuerball und Trümmerflug reichen mehrere 100 m weit.</p><div class="tw"><table class="gt"><thead><tr><th>Behälter</th><th>Volumen</th><th>Kühlwasser</th><th>Sicherheitsabstand*</th><th>Absperrung innen</th><th>Absperrung außen</th></tr></thead><tr><td>Druckgasflasche</td><td class="n">bis 0,1 m³</td><td class="n">200 l/min</td><td class="n">50 m</td><td class="n">100 m</td><td class="n">200 m</td></tr><tr><td>Haustank</td><td class="n">bis 5 m³</td><td class="n">400 l/min</td><td class="n">100 m</td><td class="n">200 m</td><td class="n">400 m</td></tr><tr><td>Tankwagen</td><td class="n">bis 36 m³</td><td class="n">1.600 l/min</td><td class="n">200 m</td><td class="n">400 m</td><td class="n">800 m</td></tr><tr><td>Kesselwagen</td><td class="n">bis 110 m³</td><td class="n">4.800 l/min</td><td class="n">300 m</td><td class="n">600 m</td><td class="n">1.200 m</td></tr></table></div><p class="muted">* Für Personal in Brandschutzbekleidung, darf zum Aufstellen von Werfern kurz unterschritten werden.</p>'},
+ erd:{t:"Erdgas",ref:"ÖBFV-Info E-07",gef:["Explosions- und Brandgefahr","Trümmerflug bei Flaschenzerknall oder beschädigter Gasleitung","Fahrzeugantriebe mit Hochdruckbehältern (200 bar)","LNG: Erfrierungsgefahr, tiefkalte Schwaden schwerer als Luft, bei beschädigter Isolierung rasches Verdampfen"],
+  mas:["Gasleitung absperren oder abdichten","Gebäude räumen und absperren","LNG: bodennahe Schwaden mit Düsenschläuchen oder Hydroschildern verwirbeln","Direkt beflammte Objekte mit mindestens 15 l/(m²·min) kühlen, gefährdete Umgebung mit mindestens 1,5 l/(m²·min)","Erdgastankstelle: NOT-AUS drücken"],warn:"LNG: Wasser fördert die Verdampfung!",
+  extra:'<p class="muted">Gasnotruf: <a class="gtel" href="tel:128">128</a></p>'},
+ h2:{t:"Wasserstoff",ref:"ÖBFV-Info E-08",gef:["Explosions- und Brandgefahr, Flaschenzerknall mit Trümmerflug","Farblose Flamme: Wärmebildkamera verwenden","Bei Leckagen Selbstentzündung möglich","Fahrzeugantriebe mit 900 bar oder tiefkaltem Wasserstoff (LH₂)","LH₂ (UN 1966, unter −253 °C): Erfrierungsgefahr, bei beschädigter Isolierung rasches Verdampfen"],
+  mas:["Direkt beflammte Objekte mit mindestens 15 l/(m²·min) kühlen","Gefährdete Umgebung mit mindestens 1,5 l/(m²·min) kühlen"],warn:"Wasser auf tiefkalten Wasserstoff fördert die Verdampfung!"},
+ ace:{t:"Acetylen",ref:"ÖBFV-Info E-13",gef:["Explosions- und Brandgefahr","Flaschenzerknall mit Trümmerflug bis 300 m","Anzeichen für Selbstzersetzung: Temperaturanstieg, verbrennender Farbanstrich, bei Gasaustritt Ruß oder Qualm, ungewöhnlicher Geruch, verändertes Geräusch"],
+  mas:["Keine Gasflaschen-Bergebehälter und keine Abdichteinrichtungen (Chlorgas-Notfallkappe) verwenden","Flaschenbündel und -batterien mindestens 24 Stunden aus massiver Deckung kühlen"],warn:"Warme oder heiße Acetylenflaschen nicht mehr bewegen!",
+  extra:'<h3>Ablauf bei warmer Flasche</h3><ol class="gul"><li>Mindestens 1 Stunde aus der Deckung kühlen.</li><li>Kühlung stoppen, Temperatur mit Wärmebildkamera prüfen.</li><li>Kein Temperaturanstieg: Flasche 24 Stunden weiterkühlen.</li><li>Temperaturanstieg: mindestens 24 Stunden aus massiver Deckung kühlen, gegebenenfalls Beschuss durch Fachkräfte.</li><li>Danach zum Füllwerk.</li></ol>'},
+ co:{t:"Kohlenstoffmonoxid",gef:["Gefährliches Atemgift, breitet sich stark in Nachbarräume aus","Quellen: Feuerstätten, Abgasanlagen, Holzkohle- und Gasgriller, Pelletlager, Dehnfugenbrände, Fahrzeugabgase","Niedrige Dosis: grippeähnlich, Schwindel, Kopfschmerz. Höhere Dosis: Bewusstlosigkeit, Lebensgefahr"],
+  mas:["Personen sofort in unbelasteten Bereich bringen, Erste Hilfe","Atemschutz, Frischluft zuführen, Räume lüften","Ausbreitung in Nachbarwohnungen bewerten, Bewohner informieren, ggf. räumen","Messen, Ursache klären, weiter nach Messwerten entscheiden"],
+  extra:'<div class="tw"><table class="gt"><tr><td>MAK (8 h)</td><td class="n">20 ppm</td></tr><tr><td>AEGL-2 (4 h)</td><td class="n">33 ppm</td></tr><tr><td>AEGL-2 (10 min)</td><td class="n">420 ppm</td></tr></table></div>'},
+ nh3:{t:"Ammoniak",gef:["Explosionsgefahr","Erfrierungsgefahr, besonders bei flüssigem Ammoniak","Wassergefährdend","Mit Luftfeuchte wird das Gas schwerer als Luft und bleibt am Boden"],
+  mas:["Menschenrettung: Brandschutzbekleidung mit umluftunabhängigem Atemschutz","Weitere Tätigkeiten: gasdichter Chemikalienschutzanzug, kälteisolierende Unterkleidung","Gaswolken mit Sprühstrahl niederschlagen, das Wasser ist alkalisch: Rückhaltung einplanen","Lachen mit Folien, Planen oder Mittelschaum abdecken"],warn:"Wasser auf flüssiges Ammoniak fördert die Verdampfung!"},
+ cl:{t:"Chlor",ref:"ÖBFV-Info E-05",gef:["Erfrierungsgefahr bei flüssigem Chlor","Starkes Oxidationsmittel: kann brennbare Stoffe entzünden oder zur Explosion bringen","Wassergefährdend"],
+  mas:["Menschenrettung: Brandschutzbekleidung mit umluftunabhängigem Atemschutz","Weitere Tätigkeiten: gasdichter Chemikalienschutzanzug, kälteisolierende Unterkleidung","Gaswolke mit Sprühstrahl verdünnen","Lachen mit Folien, Planen oder Mittelschaum abdecken","Löschmaßnahmen auf die Umgebung abstimmen","Chlorgas-Notfallset zum Abdichten verwenden"],warn:"Austrittsstelle keinesfalls mit Wasser beaufschlagen, Wasser fördert die Verdampfung!"},
+ h2s:{t:"Schwefelwasserstoff",gef:["Explosions- und Brandgefahr","Hoch giftig, wassergefährdend","Riecht nach faulen Eiern, bei höherer Konzentration setzt der Geruchssinn aus!"],
+  mas:["Menschenrettung: Brandschutzbekleidung mit umluftunabhängigem Atemschutz","Weitere Tätigkeiten: gasdichter Chemikalienschutzanzug","Gaswolken mit Sprühstrahl niederschlagen"]}
+};
+/* n Name, z Zusatz, un [UN, Zusatz, Gefahrnummer], g Gefahren, mak, trk, etw (+etwL), dd Gasdichte, gas, fp Flammpunkt, zp Zündpunkt, ex Explosionsbereich, ck Checkliste, h Hinweis */
+const STOFFE=[
+ {n:"Aceton",un:[["1090"]],g:"F",mak:"500",etw:"500",dd:"~2,1",fp:"−19",zp:"540",ex:[2,13]},
+ {n:"Acetylen",z:"Ethin, Dissousgas",un:[["1001","","239"]],g:"F",dd:"~0,9",gas:1,zp:"305",ex:[1.5,100],ck:"ace"},
+ {n:"Ameisensäure",un:[["1779"]],g:"FC",mak:"5",dd:"~1,6",fp:"48",zp:"480",ex:[12,51]},
+ {n:"Ammoniak",un:[["1005","verdichtet","268"]],g:"FTC",mak:"20",etw:"110",dd:"~0,6",gas:1,zp:"630",ex:[15,30],ck:"nh3"},
+ {n:"Argon",un:[["1006","verdichtet"],["1951","tiefkalt, flüssig"]],mak:"–",dd:"~1,7",gas:1,ex:"nb"},
+ {n:"Benzin",z:"Ottokraftstoff",un:[["1203","","33"]],g:"F",mak:"?",dd:">3",fp:"−20",zp:"280",ex:[0.6,8]},
+ {n:"Benzol",z:"engl. Benzene",un:[["1114"]],g:"F",mak:"1",trk:1,etw:"20",dd:"~2,7",fp:"−11",zp:"555",ex:[1.2,8]},
+ {n:"Butan",un:[["1011","","23"]],g:"F",mak:"800",dd:"~2,0",gas:1,fp:"−65",zp:"365",ex:[1.5,8.5],ck:"flg"},
+ {n:"Chlor",un:[["1017","","265"]],g:"OTC",mak:"0,5",etw:"1",dd:"~2,4",gas:1,ex:"nb",ck:"cl"},
+ {n:"Diethylether",z:"Äther",un:[["1155"]],g:"F",mak:"100",dd:"~2,6",fp:"−40",zp:"170",ex:[2,48]},
+ {n:"Dieselkraftstoff",un:[["1202","","30"]],g:"F",mak:"?",dd:">4",fp:">55",zp:"220",ex:[0.6,6.5]},
+ {n:"Erdgas, Methan",un:[["1971","verdichtet, CNG","23"],["1972","tiefkalt, flüssig, LNG","223"]],g:"F",mak:"?",dd:"~0,6",gas:1,zp:"595",ex:[4.4,17],ck:"erd"},
+ {n:"Essigsäure 100 %",z:"Eisessig",un:[["2789"]],g:"FC",mak:"10",etw:"20",dd:"~2,1",fp:"37",zp:"485",ex:[4,17]},
+ {n:"Ethanol",z:"Alkohol",un:[["1170"]],g:"F",mak:"1.000",etw:"3.000",dd:"~1,6",fp:"12",zp:"425",ex:[3,19]},
+ {n:"Ethen",z:"Ethylen",un:[["1962"]],g:"F",mak:"?",dd:"~1,0",gas:1,zp:"425",ex:[2.7,36]},
+ {n:"Ethylenoxid",un:[["1040"]],g:"FT",mak:"1",trk:1,etw:"14",etwL:"ETW",dd:"~1,5",gas:1,fp:"−18",zp:"440",ex:[2.6,100]},
+ {n:"Flüssiggas",z:"Propan-Butan-Gemisch, LPG",un:[["1965","","23"]],g:"F",dd:"~1,6",gas:1,zp:"~365",ex:[1.5,10.8],ck:"flg"},
+ {n:"Heizöl EL",z:"Ofenheizöl",un:[["1202","","30"]],g:"F",mak:"?",dd:">4",fp:">55",zp:"~220",ex:[0.6,6.5],h:"Im Blattler (S. 89) stehen „<4“ und „<55“. Hier wie bei Dieselkraftstoff angegeben, bitte prüfen."},
+ {n:"Kohlenstoffdioxid",z:"Kohlendioxid, CO₂",un:[["1013","verdichtet","20"],["2187","tiefkalt, flüssig","22"]],mak:"5.000",etw:"10.000",etwL:"ETW",dd:"~1,5",gas:1,ex:"nb"},
+ {n:"Kohlenstoffmonoxid",z:"Kohlenmonoxid, CO",un:[["1016","","263"]],g:"FT",mak:"20",etw:"33",etwL:"ETW",dd:"~1",gas:1,zp:"605",ex:[12.5,74],ck:"co"},
+ {n:"Lachgas",z:"Distickstoffmonoxid",un:[["1070"]],g:"O",mak:"100",dd:"~1,5",gas:1,ex:"nbb"},
+ {n:"Methanol",un:[["1230","","336"]],g:"FT",mak:"200",etw:"720",etwL:"ETW",dd:"~1,1",fp:"10",zp:"455",ex:[5.5,36.5]},
+ {n:"Naphthalin",un:[["2304"]],g:"F",mak:"10",dd:"~4,4",fp:"~80",zp:"520",ex:[0.9,5.9],h:"Im Blattler (S. 89) steht als Flammpunkt 9 °C, vermutlich ein Druckfehler. Hier mit rund 80 °C angegeben, bitte prüfen."},
+ {n:"Phenol",un:[["1671","fest"],["2312","geschmolzen"]],g:"FTC",mak:"2",etw:"15",etwL:"AEGL-2",dd:"~3,2",fp:"79",zp:"~600",ex:[1.3,9.5]},
+ {n:"Propan",un:[["1978","","23"]],g:"F",mak:"1.000",dd:"~1,6",gas:1,zp:"470",ex:[2.1,10.8],ck:"flg"},
+ {n:"Propanol",z:"Propylalkohol",un:[["1274"]],g:"F",mak:"200",dd:"~2,1",fp:"12",zp:"425",ex:[2,13.5]},
+ {n:"Sauerstoff",un:[["1072","verdichtet","25"],["1073","tiefkalt, flüssig","225"]],g:"O",mak:"–",dd:"~1,1",gas:1,ex:"nbb"},
+ {n:"Schwefelkohlenstoff",z:"Kohlendisulfid",un:[["1131"]],g:"FT",mak:"5",etw:"100",etwL:"ETW",dd:"~2,6",fp:"−30",zp:"95",ex:[1,60]},
+ {n:"Schwefelwasserstoff",z:"H₂S",un:[["1053","","263"]],g:"FT",mak:"5",etw:"20",etwL:"ETW",dd:"~1,2",gas:1,zp:"260",ex:[4.3,46],ck:"h2s",h:"Die Checkliste im Blattler (S. 84) nennt 15–30 Vol.-% und 630 °C, das sind die Werte von Ammoniak. Hier gelten die Werte der Stoffliste (S. 89)."},
+ {n:"Vinylchlorid",z:"VC",un:[["1086"]],g:"F",mak:"2",trk:1,etw:"820",etwL:"ETW",dd:"~2,2",gas:1,zp:"415",ex:[3.8,31]},
+ {n:"Wasserstoff",z:"H₂",un:[["1049","verdichtet","23"],["1966","tiefkalt, flüssig","223"]],g:"F",mak:"–",dd:"~0,1",gas:1,zp:"~560",ex:[4,77],ck:"h2"}
+];
+const UNI={};
+Object.entries(UN).forEach(([u,s])=>UNI[u]={n:s[0],kl:s[1],k:s[2]});
+STOFFE.forEach((s,i)=>s.un.forEach(([u,z,k])=>{const e=UNI[u]||(UNI[u]={n:s.n+(z?", "+z:"")});if(e.s==null)e.s=i;if(k&&!e.k)e.k=k;}));
+const G4C=["Menschen","Tiere","Umwelt","Sachwerte","Mannschaft","Gerät"];
+const G4=[["Atemgifte","111010"],["Angstreaktion","110010"],["Ausbreitung","111111"],["Atomare Strahlung","111111"],["Chemische Stoffe","111111"],["Erkrankung, Verletzung","110010"],["Explosion","111111"],["Elektrizität","110111"],["Einsturz, Absturz","110111"]];
+const KL=[["1","Explosive Stoffe und Gegenstände mit Explosivstoff","#F28C28"],["2","Entzündbare Gase","#C62828"],["2","Nicht entzündbare, nicht giftige Gase","#2E8B3A"],["2","Giftige Gase","#FFFFFF"],
+ ["3","Entzündbare flüssige Stoffe","#C62828"],["4.1","Entzündbare feste, selbstzersetzliche und polymerisierende Stoffe","repeating-linear-gradient(45deg,#C62828 0 5px,#FFFFFF 5px 10px)"],
+ ["4.2","Selbstentzündliche Stoffe","linear-gradient(to bottom right,#FFFFFF 50%,#C62828 50%)"],["4.3","Stoffe, die mit Wasser entzündbare Gase entwickeln","#1F5FBF"],
+ ["5.1","Entzündend (oxidierend) wirkende Stoffe","#F2C200"],["5.2","Organische Peroxide","linear-gradient(to bottom right,#C62828 50%,#F2C200 50%)"],
+ ["6.1","Giftige Stoffe","#FFFFFF"],["6.2","Ansteckungsgefährliche Stoffe","#FFFFFF"],["7","Radioaktive Stoffe","linear-gradient(to bottom right,#F2C200 50%,#FFFFFF 50%)"],
+ ["8","Ätzende Stoffe","linear-gradient(to bottom right,#FFFFFF 50%,#16181C 50%)"],["9","Verschiedene gefährliche Stoffe und Gegenstände","linear-gradient(to bottom right,transparent 50%,#FFFFFF 50%),repeating-linear-gradient(45deg,#16181C 0 3px,#FFFFFF 3px 7px)"]];
+const gef={x:false,k:"",un:"",tab:"tafel",q:"",sel:null,c4:[]};
+const nf=v=>v.toLocaleString("de-AT",{maximumFractionDigits:2});
+const fmtDose=u=>u>=1e6?nf(u/1e6)+" Sv/h":u>=1000?nf(u/1000)+" mSv/h":nf(u)+" µSv/h";
+const numIn=v=>parseFloat(String(v).replace(",","."));
+
+function gefTab(t){
+ gef.tab=t;
+ document.querySelectorAll("[data-gt]").forEach(b=>b.setAttribute("aria-selected",b.dataset.gt===t));
+ document.querySelectorAll("[data-gp]").forEach(p=>p.hidden=p.dataset.gp!==t);
+}
+function renderGef(){
+ const {x,k,un}=gef,o=[];
+ if(x)o.push('<div class="gwarn">X: Reagiert gefährlich mit Wasser. Wasser nur mit Zustimmung von Sachverständigen einsetzen.</div>');
+ if(k.length>=2){const key=x&&KS["X"+k]?"X"+k:k,sp=KS[key],ds=[...new Set(k.replace(/0/g,"").split(""))];
+  const chips=ds.map(d=>`<span class="digit"><b>${d}</b>${KD[d]||"Ziffer ohne Bedeutung, Eingabe prüfen"}${k.split(d).length>2?" (verstärkt)":""}</span>`).join("")
+   +(k.includes("0")?'<span class="digit"><b>0</b>keine weitere Zusatzgefahr</span>':"");
+  o.push(`<div class="gbox"><h3>Gefahrnummer ${x?"X":""}${k}</h3>${sp?`<span class="big">${sp}</span>`:'<span class="muted">Diese Kombination ist nicht festgelegt. Tafel prüfen, Bedeutung aus den Ziffern ableiten.</span>'}<div class="digits">${chips}</div></div>`);}
+ if(un.length===4){const e=UNI[un];
+  if(e){const ek=e.k?e.k.replace("X",""):"";
+   o.push(`<div class="gbox"><h3>UN ${un}</h3><span class="big">${e.n}</span><span class="muted">${e.kl?`Gefahrgutklasse ${e.kl}`:""}${e.kl&&e.k?", ":""}${e.k?`übliche Gefahrnummer ${e.k}`:""}</span>${e.k&&k.length>=2&&ek!==k?`<p class="gnote">Eingegebene Gefahrnummer ${k} weicht von der üblichen (${e.k}) ab. Tafel nochmals prüfen.</p>`:""}${e.s!=null?`<div class="actions" style="margin-top:8px"><button class="btn primary" data-st="${e.s}">Stoffkarte ${STOFFE[e.s].n}</button></div>`:""}</div>`);}
+  else o.push(`<div class="gbox"><h3>UN ${un}</h3><span class="big">Nicht in der lokalen Liste</span><span class="muted">Stoff in der ERI-Card oder einer Gefahrgut-Datenbank nachschlagen.</span></div>`);}
+ $("#gOut").innerHTML=o.join("");}
+function gasHint(s){const d=numIn(s.dd.replace(/[~<>]/g,""));if(isNaN(d))return"";const w=s.gas?"Gas":"Dämpfe";
+ if(d>=1.15||s.dd[0]===">")return`${w} schwerer als Luft: ${s.gas?"sammelt":"sammeln"} sich am Boden, in Kellern, Kanälen und Senken`;
+ if(d<=0.85)return`${w} leichter als Luft: ${s.gas?"steigt":"steigen"} auf`;return`${w} etwa so schwer wie Luft: ${s.gas?"verteilt":"verteilen"} sich`;}
+function renderList(){
+ const q=gef.q.trim().toLowerCase(),L=STOFFE.map((s,i)=>[s,i]).filter(([s])=>!q||(s.n+" "+(s.z||"")+" "+s.un.map(u=>u[0]).join(" ")).toLowerCase().includes(q));
+ $("#gList").innerHTML=L.length?L.map(([s,i])=>`<li><button data-st="${i}" aria-current="${gef.sel===i}"><b>${s.n}</b><small>UN ${s.un.map(u=>u[0]).join(", ")}${s.ck?", Checkliste":""}</small></button></li>`).join("")
+  :`<li class="empty">Kein Stoff gefunden. Mit UN-Nummer im Reiter „Warntafel“ suchen oder ERI-Card verwenden.</li>`;}
+function renderDet(){
+ const el=$("#gDet");if(gef.sel==null){el.innerHTML="";el.className="";return;}
+ const s=STOFFE[gef.sel],c=s.ck&&CK[s.ck],box=(v,l,sm)=>`<div><span>${l}</span><b>${v||"–"}</b>${sm?`<small>${sm}</small>`:""}</div>`;
+ let ex;if(Array.isArray(s.ex)){const [a,b]=s.ex;ex=`<div class="exb"><span class="muted">Explosionsbereich <b>${nf(a)} bis ${nf(b)} Vol.-%</b></span><div class="exbar" aria-hidden="true"><i style="left:${a}%;width:${Math.max(b-a,1)}%"></i></div><div class="exlab"><span>0</span><span>50</span><span>100 Vol.-%</span></div></div>`;}
+ else ex=`<p class="ghint">${s.ex==="nbb"?"Nicht brennbar, aber brandfördernd":"Nicht brennbar"}</p>`;
+ el.className="sdet";
+ el.innerHTML=`<div class="shd"><h2>${s.n}</h2><button class="btn x" id="gDetX">Schließen</button></div>
+  ${s.z?`<p class="muted">${s.z}</p>`:""}
+  <div>${s.un.map(([u,z,k])=>`<span class="tag">${k?k+" / ":""}UN ${u}${z?", "+z:""}</span>`).join(" ")}</div>
+  ${s.g?`<div>${s.g.split("").map(h=>`<span class="htag ${HT[h][0]}">${HT[h][1]}</span>`).join("")}</div>`:""}
+  <div class="kv">${box(s.mak,s.trk?"TRK (ppm)":"MAK (ppm)")}${box(s.etw,(s.etwL||"ETW-4")+" (ppm)",s.etw?"darüber Atemschutz":"")}${box(s.dd,"Gasdichte (Luft = 1)")}${box(s.fp&&s.fp+" °C","Flammpunkt")}${box(s.zp&&s.zp+" °C","Zündpunkt")}</div>
+  <p class="ghint">${gasHint(s)}</p>${ex}
+  ${s.h?`<p class="gnote">${s.h}</p>`:""}
+  ${c?`<h3>Checkliste ${c.t}${c.ref?` <small class="muted">(${c.ref})</small>`:""}</h3><div class="ck"><div><h3>Gefahren</h3><ul class="gul">${c.gef.map(t=>`<li>${t}</li>`).join("")}</ul></div><div><h3>Maßnahmen</h3><ul class="gul">${c.mas.map(t=>`<li>${t}</li>`).join("")}</ul></div></div>${c.warn?`<div class="gwarn">${c.warn}</div>`:""}${c.extra||""}`:""}`;
+ $("#gDetX").onclick=()=>{gef.sel=null;renderDet();renderList();};}
+function openStoff(i){gef.sel=+i;gef.q="";$("#gQ").value="";gefTab("stoffe");renderList();renderDet();$("#gDet").scrollIntoView({behavior:"smooth",block:"start"});}
+function render4(){
+ $("#g4").innerHTML=`<thead><tr><th></th>${G4C.map((c,j)=>`<th${j===4?' style="border-left:2px solid var(--line)"':""}>${c}</th>`).join("")}</tr></thead><tbody>`
+  +G4.map(([n,m],i)=>`<tr tabindex="0" data-g4="${i}" aria-pressed="${gef.c4.includes(i)}"><th>${n}</th>${m.split("").map((v,j)=>`<td class="${v==="1"?"y":"no"}"${j===4?' style="border-left:2px solid var(--line)"':""} aria-label="${G4C[j]}: ${v==="1"?"betroffen":"nicht betroffen"}">${v==="1"?"●":"–"}</td>`).join("")}</tr>`).join("")+"</tbody>";
+ const hit=j=>gef.c4.some(i=>G4[i][1][j]==="1"),pro=[0,1,2,3].filter(hit).map(j=>G4C[j]),own=[4,5].filter(hit).map(j=>G4C[j]);
+ $("#g4Out").textContent=gef.c4.length?`Gefahren bekämpfen für: ${pro.join(", ")}. Eigenschutz für: ${own.join(", ")}.`:"Noch keine Gefahr ausgewählt.";}
+function initGef(){
+ $(".gtabs").onclick=e=>{const b=e.target.closest("[data-gt]");if(b)gefTab(b.dataset.gt);};
+ $(".gtabs").onkeydown=e=>{if(!["ArrowLeft","ArrowRight"].includes(e.key))return;const bs=[...document.querySelectorAll("[data-gt]")],i=bs.findIndex(b=>b.dataset.gt===gef.tab),n=bs[(i+(e.key==="ArrowRight"?1:bs.length-1))%bs.length];gefTab(n.dataset.gt);n.focus();};
+ const kI=$("#gK"),uI=$("#gUN"),xb=$("#gX");
+ const sync=()=>{kI.value=gef.k;uI.value=gef.un;xb.setAttribute("aria-pressed",gef.x);$("#gXs").hidden=!gef.x;renderGef();};
+ kI.oninput=()=>{kI.value=kI.value.replace(/\D/g,"").slice(0,3);gef.k=kI.value;renderGef();};
+ kI.onkeydown=e=>{if(e.key==="Enter")uI.focus();};
+ uI.oninput=()=>{uI.value=uI.value.replace(/\D/g,"").slice(0,4);gef.un=uI.value;renderGef();if(uI.value.length===4)uI.blur();};
+ xb.onclick=()=>{gef.x=!gef.x;sync();};
+ $("#gClr").onclick=()=>{gef.x=false;gef.k="";gef.un="";sync();kI.focus();};
+ $("#gAll").innerHTML=Object.entries(KS).map(([k,v])=>`<tr><th class="n">${k}</th><td>${v}${k[0]==="X"?" *)":""}</td></tr>`).join("");
+ const p=$("[data-gp]").parentNode;p.addEventListener("click",e=>{const b=e.target.closest("[data-st]");if(b)openStoff(b.dataset.st);});
+ $("#gQ").value=gef.q;$("#gQ").oninput=e=>{gef.q=e.target.value;renderList();};
+ const t4=$("#g4"),tog=tr=>{const i=+tr.dataset.g4;gef.c4=gef.c4.includes(i)?gef.c4.filter(v=>v!==i):[...gef.c4,i];render4();t4.querySelector(`[data-g4="${i}"]`).focus();};
+ t4.onclick=e=>{const tr=e.target.closest("[data-g4]");if(tr)tog(tr);};
+ t4.onkeydown=e=>{const tr=e.target.closest("[data-g4]");if(tr&&(e.key==="Enter"||e.key===" ")){e.preventDefault();tog(tr);}};
+ $("#gKl").innerHTML=KL.map(([n,t,bg])=>`<li><span class="dia" style="background:${bg}"><span>${n}</span></span><div><b>Klasse ${n}</b><small>${t}</small></div></li>`).join("");
+ $("#gTI").oninput=e=>{const v=numIn(e.target.value);$("#gTIo").textContent=isNaN(v)?"–":fmtDose(v*10);};
+ const ak=()=>{const v=numIn($("#gAkt").value);$("#gAkto").textContent=isNaN(v)?"–":fmtDose(v*$("#gAktU").value*0.5);};
+ $("#gAkt").oninput=ak;$("#gAktU").onchange=ak;
+ render4();renderList();renderDet();gefTab(gef.tab);sync();}
+
+/* Beteiligte Organisationseinheiten (Beispiel: dritte Feuerwehr wird nachalarmiert) */
+let oe=[],oeTimers=[];
+function renderOE(){const b=$("#oeBody");if(!b||!alarm)return;
+ b.innerHTML=oe.map(o=>`<tr><td>${esc(o.name)}${o.nach?'<span class="nach">nachalarmiert</span>':""}</td><td>${o.t.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})}</td><td>${o.t.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</td></tr>`).join("");}
+function startOE(){oeTimers.forEach(clearTimeout);oeTimers=[];
+ const u=alarm.units.split(",").map(s=>s.trim()),f=alarm.first||2;
+ oe=u.slice(0,f).map(name=>({name,t:new Date(alarmStart)}));
+ u.slice(f).forEach((name,k)=>oeTimers.push(setTimeout(()=>{oe.push({name,t:new Date(),nach:true});renderOE();},20000+k*15000)));}
+
+/* Chat mit anderen Feuerwehren (Vorschau: lokal, ohne Server) */
+const QUICK=["Rücken aus","Am Einsatzort eingetroffen","Benötigen Unterstützung","Lage unter Kontrolle","Einsatz beendet, rücken ein"];
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDT=d=>new Date().toDateString()===d.toDateString()?fmtT(d):d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})+" "+fmtT(d);
+const curChat=()=>alarm?chatAlarm:chatGeneral;
+function renderChat(){
+ if(view!=="chat")return;
+ $("#chName").textContent=alarm?`Einsatz ${alarm.a}${alarm.l}`:"Allgemein";
+ $("#chMembers").textContent=alarm?"Teilnehmer: "+alarm.units:"Kanal für alle Feuerwehren im Abschnitt";
+ const box=$("#msgs");
+ box.innerHTML=curChat().map(m=>m.sys?`<li class="msg sys">${esc(m.text)}</li>`:
+  `<li class="msg${m.me?" me":""}">${m.me?"":`<div class="who">${esc(m.from)}</div>`}${esc(m.text)}<time>${fmtDT(m.t)}</time></li>`).join("");
+ box.scrollTop=box.scrollHeight;}
+function postMsg(m,list){(list||curChat()).push(m);if(view==="chat")renderChat();else if(!m.me){unread++;renderSide();}}
+function initChat(){
+ const send=t=>{t=t.trim();if(!t)return;postMsg({from:ME,me:true,text:t,t:new Date()});};
+ $("#quick").innerHTML=QUICK.map(q=>`<button>${q}</button>`).join("");
+ $("#quick").onclick=e=>{const b=e.target.closest("button");if(b)send(b.textContent);};
+ const inp=$("#chIn");
+ $("#chSend").onclick=()=>{send(inp.value);inp.value="";inp.focus();};
+ inp.onkeydown=e=>{if(e.key==="Enter"){send(inp.value);inp.value="";}};
+ renderChat();}
+function startChat(){
+ chatTimers.forEach(clearTimeout);chatTimers=[];unread=0;
+ chatAlarm=[{sys:true,text:`Einsatzchat für ${alarm.a}${alarm.l} ${alarm.what} eröffnet`,t:new Date()}];
+ const others=alarm.units.split(",").map(s=>s.trim()).filter(u=>u!==ME),list=chatAlarm;
+ [[7000,0,"Rücken aus mit 2 Fahrzeugen."],[16000,1,"Rücken aus, 6 Mann, Atemschutz an Bord."],[30000,0,"Am Einsatzort eingetroffen. Wo sollen wir uns melden?"]]
+  .forEach(([ms,o,text])=>{if(others[o])chatTimers.push(setTimeout(()=>postMsg({from:others[o],text,t:new Date()},list),ms));});}
+
+function initAlarmView(){
+ $("#demoAlarm").onclick=()=>endAlarm();
+ $("#demoBtns").onclick=e=>{const b=e.target.closest("[data-demo]");if(b)startAlarm(+b.dataset.demo);};
+ $("#quals").onclick=e=>{const b=e.target.closest("[data-q]");if(!b)return;qf=qf===b.dataset.q?null:b.dataset.q;renderResp(true);};
+ renderAlarm();
+}
+function renderAlarm(){
+ if(view!=="alarmierung")return;
+ $("#alarmView").hidden=!alarm;$("#quietView").hidden=!!alarm;$("#demoAlarm").hidden=!alarm;$("#demoBtns").hidden=!!alarm;
+ if(!alarm)return;
+ const c=AS[alarm.a].c[alarm.l],box=$("#alarmBox");box.style.setProperty("--c",c);box.style.setProperty("--i",inkOn(c));
+ $("#aCode").textContent=alarm.a+alarm.l;$("#aWhat").textContent=alarm.what;
+ $("#aWhere").innerHTML=`${alarm.street}<small>${alarm.city}</small>`;$("#aText").textContent=alarm.text;
+ {const d=new Date(alarmStart);$("#aWhen").textContent=d.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})+", "+d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+ tick();renderResp(true);renderOE();
+}
+function renderNav(){
+ $("#navOn").hidden=!alarm;$("#navOff").hidden=!!alarm;if(!alarm)return;
+ $("#nAddr").textContent=alarm.street;$("#nCity").textContent=alarm.city;
+ $("#nGo").href="https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(alarm.street+", "+alarm.city);
+ $("#nEarth").href="https://earth.google.com/web/search/"+encodeURIComponent(alarm.street+", "+alarm.city+", Österreich");
+ render3D();
+}
+
+/* 3D-Ansicht: Google 3D Maps, Kamera kreist langsam um den Einsatzort */
+let gmLoad=null,spin=true;const geoCache={};
+function loadMaps(){
+ if(gmLoad)return gmLoad;
+ gmLoad=new Promise((res,rej)=>{
+  if(!GMAPS_KEY)return rej("nokey");
+  window.__gm3dReady=res;
+  const s=document.createElement("script");
+  s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GMAPS_KEY)+"&v=weekly&loading=async&callback=__gm3dReady";
+  s.async=true;s.onerror=()=>{gmLoad=null;rej("load");};
+  document.head.appendChild(s);
+ });
+ gmLoad.catch(()=>{});
+ return gmLoad;
+}
+async function render3D(){
+ const box=$("#m3d"),msg=$("#m3dMsg"),btn=$("#m3dSpin");if(!box||!alarm)return;
+ const a=alarm,addr=a.street+", "+a.city+", Österreich";
+ const say=t=>{msg.textContent=t;msg.hidden=false;};
+ if(!navigator.onLine)return say("Offline: Die 3D-Ansicht braucht eine Internetverbindung.");
+ say("3D-Ansicht wird geladen …");
+ try{await loadMaps();}catch(e){return say(e==="nokey"
+  ?"Für die 3D-Ansicht fehlt noch der Google-Maps-API-Schlüssel (GMAPS_KEY im Code)."
+  :"Die 3D-Ansicht konnte nicht geladen werden. In der Claude-Vorschau ist das normal, am Tablett über GitHub Pages sollte sie funktionieren.");}
+ let pos=geoCache[addr];
+ if(!pos){try{
+  const {Geocoder}=await google.maps.importLibrary("geocoding");
+  const r=await new Geocoder().geocode({address:addr,region:"at"});
+  const l=r.results[0].geometry.location;pos=geoCache[addr]={lat:l.lat(),lng:l.lng()};
+ }catch(e){return say("Adresse für die 3D-Ansicht nicht gefunden: "+addr);}}
+ if(view!=="navigation"||alarm!==a||!$("#m3d"))return;
+ let lib;try{lib=await google.maps.importLibrary("maps3d");}catch(e){return say("3D-Karten sind für diesen API-Schlüssel nicht verfügbar.");}
+ const {Map3DElement,Marker3DElement,MapMode,AltitudeMode}=lib;
+ const cam={center:{lat:pos.lat,lng:pos.lng,altitude:0},range:180,tilt:62,heading:0};
+ const map=new Map3DElement({...cam,mode:MapMode?MapMode.HYBRID:"HYBRID"});
+ map.append(new Marker3DElement({position:{lat:pos.lat,lng:pos.lng,altitude:30},altitudeMode:AltitudeMode?AltitudeMode.RELATIVE_TO_GROUND:"RELATIVE_TO_GROUND",extruded:true,label:a.a+a.l}));
+ const orbit=()=>{if(spin&&map.isConnected)map.flyCameraAround({camera:cam,durationMillis:60000,repeatCount:1,rounds:1});};
+ const setSpin=on=>{spin=on;btn.setAttribute("aria-pressed",on);btn.textContent=on?"Drehung anhalten":"Drehung starten";if(on)orbit();else if(map.stopCameraAnimation)map.stopCameraAnimation();};
+ map.addEventListener("gmp-animationend",orbit);
+ box.addEventListener("pointerdown",()=>{if(spin)setSpin(false);});
+ btn.onclick=()=>setSpin(!spin);
+ box.replaceChildren(map);msg.hidden=true;btn.hidden=false;
+ setSpin(true);
+}
+function li(r,last){const [n,q]=crew[r.i];return `<li class="${r===last?"new":""}"><span class="n">${n}</span>${q.map(t=>`<span class="tg${t===qf?" hit":""}" title="${QN[t]}">${t}</span>`).join("")}<time>${fmtT(r.t)}</time></li>`;}
+function renderResp(quiet){
+ if(view!=="alarmierung"||!alarm)return;
+ const yes=resp.filter(r=>r.a==="yes"),no=resp.filter(r=>r.a==="no"),last=quiet?null:resp[resp.length-1];
+ $("#cYes").textContent=yes.length;$("#cNo").textContent=no.length;$("#cOpen").textContent=crew.length-resp.length;
+ $("#quals").innerHTML=Object.keys(QN).map(k=>{const c=yes.filter(r=>crew[r.i][1].includes(k)).length;return `<button class="q${c?"":" zero"}" data-q="${k}" aria-pressed="${qf===k}"><b>${c}</b>${QN[k]}</button>`}).join("");
+ const fYes=qf?yes.filter(r=>crew[r.i][1].includes(qf)):yes,fNo=qf?no.filter(r=>crew[r.i][1].includes(qf)):no;
+ const none=qf?`<li class="empty">Niemand mit ${QN[qf]}</li>`:null;
+ $("#lYes").innerHTML=fYes.length?fYes.map(r=>li(r,last)).join(""):(none||'<li class="empty">Noch keine Zusagen</li>');
+ $("#lNo").innerHTML=fNo.length?fNo.map(r=>li(r,last)).join(""):(none||'<li class="empty">Keine Absagen</li>');
+}
+function tick(){const el=$("#since");if(!el||!alarm)return;const s=Math.floor((Date.now()-alarmStart)/1000);el.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+function badge(){renderSide();}
+
+function startAlarm(n){
+ alarm=demoAlarms[n||0];alarmStart=Date.now();resp=[];extra.clear();moreOpen=false;startChat();startOE();
+ clearInterval(clock);clock=setInterval(tick,1000);
+ clearTimeout(respTimer);
+ const order=crew.map((c,i)=>i).sort(()=>Math.random()-.5).slice(0,14);let k=0;
+ const step=()=>{if(k>=order.length)return;resp.push({i:order[k++],a:Math.random()<.72?"yes":"no",t:new Date()});renderResp();respTimer=setTimeout(step,900+Math.random()*2200);};
+ respTimer=setTimeout(step,1200);
+ $("meta[name=theme-color]").content=AS[alarm.a].c[alarm.l];
+ if(navigator.vibrate)try{navigator.vibrate([400,200,400,200,400])}catch(e){}
+ badge();show("alarmierung");
+}
+function endAlarm(){alarm=null;clearInterval(clock);clearTimeout(respTimer);chatTimers.forEach(clearTimeout);oeTimers.forEach(clearTimeout);unread=0;$("meta[name=theme-color]").content="#B3261E";badge();renderAlarm();}
+
+/* Atemschutzüberwachung nach Vorlage AB_AT20 (Überwachungstafel Dräger REGIS 300), lokal gespeichert */
+const ATS_KEY="ff-velm-ats-v2",ATS_DEF={max:30,kontrolle:10,gelb:33,rot:15};
+const ATS_SPEED=60; /* Vorschau: 1 Sekunde = 1 Minute. Für den Echtbetrieb auf 1 setzen. */
+const atsP=()=>({name:"",pEin:"",pKontr:"",pAus:""});
+const atsT=()=>({ruf:"",funk:false,kanal:"",totmann:false,ziel:"",tEin:null,tAus:null,pers:[atsP(),atsP(),atsP()]});
+const atsFresh=s=>({meta:{datum:new Date().toISOString().slice(0,10),adresse:"",bearbeiter:""},settings:Object.assign({},ATS_DEF,s||{}),trupps:[atsT()]});
+let ats=null,atsAlarmN=0;
+try{ats=JSON.parse(localStorage.getItem(ATS_KEY));}catch(e){}
+if(!ats||!ats.meta||!Array.isArray(ats.trupps))ats=atsFresh();
+ats.settings=Object.assign({},ATS_DEF,ats.settings||{});
+const atsSave=()=>{try{localStorage.setItem(ATS_KEY,JSON.stringify(ats));}catch(e){}};
+const escA=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hm=ts=>{if(!ts)return"";const d=new Date(ts);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+const hmTs=(v,ref)=>{if(!v)return null;const [h,m]=v.split(":");const d=ref?new Date(ref):new Date();d.setHours(+h,+m,0,0);return d.getTime();};
+const minT=ms=>Math.floor(ms/6e4)+" Min.";
+function atsCalc(t,now){
+ const S=ats.settings,total=Math.max(1,+S.max||30)*6e4;
+ if(!t.tEin)return{frac:1,col:"var(--ok)",bl:false,warn:false,rest:(+S.max||30)+" Min.",st:"Bereit",sub:"Max. Einsatzzeit",kb:false};
+ const el=((t.tAus||now)-t.tEin)*ATS_SPEED,rem=total-el,frac=Math.max(0,Math.min(1,rem/total));
+ if(t.tAus)return{frac,col:"var(--muted)",bl:false,warn:false,rest:minT(el),st:"Zurück",sub:"Ein "+hm(t.tEin)+", Aus "+hm(t.tAus),kb:false};
+ const r=frac<=(+S.rot||15)/100,y=frac<=(+S.gelb||33)/100;
+ const act=t.pers.filter(p=>p.name||p.pEin),kb=el>=Math.max(1,+S.kontrolle||10)*6e4&&(act.length?act.some(p=>!p.pKontr):!t.pers.some(p=>p.pKontr));
+ return{frac,col:r?"var(--red)":y?"#E8B400":"var(--ok)",bl:r&&rem>0,warn:r,leer:rem<=0,
+  rest:rem>=0?Math.ceil(rem/6e4)+" Min.":"+"+Math.ceil(-rem/6e4)+" Min.",
+  st:rem<0?"Zeit überschritten":r?"Rückzug!":y?"Achtung":"Im Einsatz",
+  sub:"Ein "+hm(t.tEin)+", seit "+minT(el),kb};
+}
+const atsBottle=(i,p)=>`<svg class="ats-bot" viewBox="0 0 60 160" aria-hidden="true"><defs><clipPath id="atsClip${i}_${p}"><rect x="10" y="27" width="40" height="127" rx="16"/></clipPath></defs>
+ <rect class="st" x="17" y="4" width="26" height="6" rx="3"/><rect class="st" x="24" y="9" width="12" height="9" rx="1"/><rect class="st" x="40" y="11" width="10" height="4" rx="2"/>
+ <rect class="sh" x="8" y="18" width="44" height="138" rx="18"/>
+ <g clip-path="url(#atsClip${i}_${p})"><rect class="fl" data-fl="${i}" x="10" y="27" width="40" height="127"/></g>
+ <rect class="gl" x="14" y="32" width="5" height="104" rx="2.5"/></svg>`;
+function atsCard(t,i){
+ const run=t.tEin&&!t.tAus,d=` data-i="${i}"`;
+ const pers=t.pers.map((p,k)=>{const dp=`${d} data-p="${k}"`,num=(f,l)=>`<label class="fld">${l}<input type="number" inputmode="numeric"${dp} data-f="${f}" value="${escA(p[f])}"></label>`;
+  return `<div class="ats-p">${atsBottle(i,k)}<div class="ats-pf"><div class="ats-n"><span>${k+1}</span><input class="ats-in" list="atsCrew"${dp} data-f="name" value="${escA(p.name)}" aria-label="Name ${k+1}"></div>
+  <div class="ats-r3">${num("pEin","Ein (bar)")}${num("pKontr","Kontr. (bar)")}${num("pAus","Aus (bar)")}</div></div>
+  ${k>=3?`<button class="ats-x" data-ats="delp"${dp} aria-label="Person ${k+1} entfernen">✕</button>`:""}</div>`;}).join("");
+ return `<section class="ats-tr" id="atsC${i}">
+ <div class="ats-th"><h2>Trupp ${i+1}</h2>${ats.trupps.length>1?`<button class="ats-x" data-ats="del"${d} aria-label="Trupp ${i+1} entfernen">✕</button>`:""}</div>
+ <div class="ats-stat"><div class="ats-rest" id="atsR${i}"></div><div class="ats-st" id="atsS${i}"></div><div class="ats-sub" id="atsU${i}"></div><span class="ats-kb" id="atsK${i}" hidden>Druckkontrolle fällig</span></div>
+ <div class="ats-btns">${run?`<button class="btn primary" data-ats="stop"${d}>Trupp zurück</button><button class="btn" data-ats="undo"${d}>Start zurücksetzen</button>`
+  :`<button class="btn ats-go" data-ats="start"${d}>${t.tAus?"Neu anschließen":"Anschließen"}</button><button class="btn" data-ats="undo"${d}${t.tEin?"":" disabled"}>Zeiten löschen</button>`}</div>
+ <label class="fld">Rufname<input${d} data-f="ruf" value="${escA(t.ruf)}"></label>
+ <div class="fld">Atemschutzträger<div class="ats-pl">${pers}</div></div>
+ ${t.pers.length<4?`<button class="btn ats-addp" data-ats="addp"${d}>+ Person</button>`:""}
+ <div class="ats-chk"><label><input type="checkbox"${d} data-f="funk"${t.funk?" checked":""}>Funk</label>
+  <input class="ats-in"${d} data-f="kanal" value="${escA(t.kanal)}" placeholder="Kanal / Funkrufname" aria-label="Funk Notiz">
+  <label><input type="checkbox"${d} data-f="totmann"${t.totmann?" checked":""}>Totmannwarner aktiviert &amp; Schlüssel hinterlegt (falls vorhanden)</label></div>
+ <label class="fld">Einsatzziel/-ort<textarea${d} data-f="ziel">${escA(t.ziel)}</textarea></label>
+ <div class="ats-r2"><label class="fld">Zeit Ein<input type="time"${d} data-time="tEin" value="${hm(t.tEin)}"></label><label class="fld">Zeit Aus<input type="time"${d} data-time="tAus" value="${hm(t.tAus)}"></label></div>
+</section>`;
+}
+function atsRender(){const g=$("#atsGrid");if(!g)return;g.innerHTML=ats.trupps.map(atsCard).join("");atsTick();}
+function initAts(){
+ const w=$("#atsWrap");
+ if(alarm&&!ats.meta.adresse){ats.meta.adresse=alarm.street+", "+alarm.city;atsSave();}
+ w.querySelectorAll("[data-m]").forEach(e=>e.value=ats.meta[e.dataset.m]||"");
+ w.querySelectorAll("[data-s]").forEach(e=>e.value=ats.settings[e.dataset.s]);
+ $("#atsCrew").innerHTML=crew.filter(c=>c[1].includes("ATS")).map(c=>`<option value="${escA(c[0])}">`).join("");
+ w.oninput=e=>{const el=e.target;
+  if(el.dataset.m)ats.meta[el.dataset.m]=el.value;
+  else if(el.dataset.s)ats.settings[el.dataset.s]=Number(el.value);
+  else if(el.dataset.f){const t=ats.trupps[+el.dataset.i],v=el.type==="checkbox"?el.checked:el.value;
+   if(el.dataset.p!==undefined)t.pers[+el.dataset.p][el.dataset.f]=v;else t[el.dataset.f]=v;}
+  else return;
+  atsSave();atsTick();};
+ w.onchange=e=>{const el=e.target,k=el.dataset.time;if(!k)return;const t=ats.trupps[+el.dataset.i];
+  t[k]=hmTs(el.value,k==="tAus"?t.tEin:null);if(t.tAus&&t.tEin&&t.tAus<t.tEin)t.tAus+=864e5;atsSave();atsRender();};
+ w.onclick=e=>{const b=e.target.closest("[data-ats]");if(!b)return;const a=b.dataset.ats,i=+b.dataset.i,t=ats.trupps[i];
+  if(a==="add")ats.trupps.push(atsT());
+  else if(a==="new"){if(!confirm("Alle Eingaben der Atemschutzüberwachung löschen und neu beginnen?"))return;ats=atsFresh(ats.settings);atsSave();initAts();return;}
+  else if(a==="start"){t.tEin=Date.now();t.tAus=null;t.pers.forEach(p=>{p.pKontr="";p.pAus="";});}
+  else if(a==="stop")t.tAus=Date.now();
+  else if(a==="undo"){if(!confirm(`Zeiten von Trupp ${i+1} löschen?`))return;t.tEin=null;t.tAus=null;}
+  else if(a==="del"){if(!confirm(`Trupp ${i+1} entfernen?`))return;ats.trupps.splice(i,1);}
+  else if(a==="addp"){if(t.pers.length<4)t.pers.push(atsP());}
+  else if(a==="delp"){const p=+b.dataset.p;if((t.pers[p].name||t.pers[p].pEin)&&!confirm(`Person ${p+1} entfernen?`))return;t.pers.splice(p,1);}
+  atsSave();atsRender();};
+ atsRender();
+}
+function atsTick(){
+ const now=Date.now();let n=0;
+ ats.trupps.forEach((t,i)=>{const c=atsCalc(t,now);if(c.warn)n++;
+  if(view!=="atemschutz")return;const card=document.getElementById("atsC"+i);if(!card)return;
+  card.querySelectorAll(`[data-fl="${i}"]`).forEach(f=>{f.style.transform="scaleY("+c.frac+")";f.style.fill=c.col;f.classList.toggle("bl",c.bl);f.closest("svg").classList.toggle("leer",!!c.leer);});
+  $("#atsR"+i).textContent=c.rest;const st=$("#atsS"+i);st.textContent=c.st;st.style.color=c.warn?"var(--red)":"";
+  $("#atsU"+i).textContent=c.sub;$("#atsK"+i).hidden=!c.kb;card.classList.toggle("warn",c.warn);});
+ if(n!==atsAlarmN){atsAlarmN=n;renderSide();}
+}
+setInterval(atsTick,1000);
+
+/* Verbindungsstatus */
+function conn(){const on=navigator.onLine;$("#conn").classList.toggle("off",!on);$("#conn span").textContent=on?"Online":"Offline";}
+addEventListener("online",conn);addEventListener("offline",conn);conn();
+
+show(location.hash.slice(1)||"alarmierung");
+</script>
+</body>
+</html>
