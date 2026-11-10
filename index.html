@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.18.1">
+<meta name="version" content="0.18.2">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -815,10 +815,10 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 </template>
 
 <script>
-const APP_VERSION="0.18.1";
+const APP_VERSION="0.18.2";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
-const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
+const GMAPS_KEY="";
 const $=s=>document.querySelector(s);
 document.querySelectorAll(".ver").forEach(e=>e.textContent="v"+APP_VERSION);
 
@@ -1192,9 +1192,14 @@ async function render3D(){
  const cam={center:{lat:pos.lat,lng:pos.lng,altitude:0},range:180,tilt:62,heading:0};
  const map=new Map3DElement({...cam,mode:MapMode?MapMode.HYBRID:"HYBRID"});
  map.append(new Marker3DElement({position:{lat:pos.lat,lng:pos.lng,altitude:30},altitudeMode:AltitudeMode?AltitudeMode.RELATIVE_TO_GROUND:"RELATIVE_TO_GROUND",extruded:true,label:a.a+a.l}));
- const orbit=()=>{if(spin&&map.isConnected)map.flyCameraAround({camera:cam,durationMillis:60000,repeatCount:1,rounds:1});};
- const setSpin=on=>{spin=on;btn.setAttribute("aria-pressed",on);btn.textContent=on?"Drehung anhalten":"Drehung starten";if(on)orbit();else if(map.stopCameraAnimation)map.stopCameraAnimation();};
- map.addEventListener("gmp-animationend",orbit);
+ /* Drehung: nur die Blickrichtung (heading) ändern, Mittelpunkt, Abstand und Neigung bleiben */
+ let raf=0,last=0;
+ const DEG_PER_S=6;/* 360° in 60 s */
+ const step=t=>{if(!spin||!map.isConnected){raf=0;return;}
+  if(last)map.heading=((map.heading||0)+DEG_PER_S*Math.min(0.1,(t-last)/1000))%360;
+  last=t;raf=requestAnimationFrame(step);};
+ const orbit=()=>{if(!raf){last=0;raf=requestAnimationFrame(step);}};
+ const setSpin=on=>{spin=on;btn.setAttribute("aria-pressed",on);btn.textContent=on?"Drehung anhalten":"Drehung starten";if(on)orbit();else{cancelAnimationFrame(raf);raf=0;}};
  box.addEventListener("pointerdown",()=>{if(spin)setSpin(false);});
  btn.onclick=()=>setSpin(!spin);
  box.replaceChildren(map);msg.hidden=true;btn.hidden=false;
