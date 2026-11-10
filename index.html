@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.18.0">
+<meta name="version" content="0.18.1">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -815,7 +815,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 </template>
 
 <script>
-const APP_VERSION="0.18.0";
+const APP_VERSION="0.18.1";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1155,6 +1155,22 @@ function loadMaps(){
  gmLoad.catch(()=>{});
  return gmLoad;
 }
+/* Adresse zu Koordinaten: zuerst Places (vom Demo Key unterstützt), sonst Geocoder */
+async function findPos(addr){
+ const errs=[];
+ try{
+  const {Place}=await google.maps.importLibrary("places");
+  const {places}=await Place.searchByText({textQuery:addr,fields:["location"],region:"at",maxResultCount:1});
+  if(places&&places[0]&&places[0].location){const l=places[0].location;return {lat:l.lat(),lng:l.lng()};}
+  errs.push("Places: kein Treffer");
+ }catch(e){console.warn("Places-Suche:",e);errs.push("Places: "+(e.message||e));}
+ try{
+  const {Geocoder}=await google.maps.importLibrary("geocoding");
+  const r=await new Geocoder().geocode({address:addr,region:"at"});
+  const l=r.results[0].geometry.location;return {lat:l.lat(),lng:l.lng()};
+ }catch(e){console.warn("Geocoder:",e);errs.push("Geocoder: "+(e.code||e.message||e));}
+ return {err:errs.join("; ")};
+}
 async function render3D(){
  const box=$("#m3d"),msg=$("#m3dMsg"),btn=$("#m3dSpin");if(!box||!alarm)return;
  const a=alarm,addr=a.street+", "+a.city+", Österreich";
@@ -1165,11 +1181,11 @@ async function render3D(){
   ?"Für die 3D-Ansicht fehlt noch der Google-Maps-API-Schlüssel (GMAPS_KEY im Code)."
   :"Die 3D-Ansicht konnte nicht geladen werden. In der Claude-Vorschau ist das normal, am Tablett über GitHub Pages sollte sie funktionieren.");}
  let pos=geoCache[addr];
- if(!pos){try{
-  const {Geocoder}=await google.maps.importLibrary("geocoding");
-  const r=await new Geocoder().geocode({address:addr,region:"at"});
-  const l=r.results[0].geometry.location;pos=geoCache[addr]={lat:l.lat(),lng:l.lng()};
- }catch(e){return say("Adresse für die 3D-Ansicht nicht gefunden: "+addr);}}
+ if(!pos){
+  pos=await findPos(addr);
+  if(!pos.lat)return say("Adresse für die 3D-Ansicht nicht gefunden: "+addr+" ("+pos.err+")");
+  geoCache[addr]=pos;
+ }
  if(view!=="navigation"||alarm!==a||!$("#m3d"))return;
  let lib;try{lib=await google.maps.importLibrary("maps3d");}catch(e){return say("3D-Karten sind für diesen API-Schlüssel nicht verfügbar.");}
  const {Map3DElement,Marker3DElement,MapMode,AltitudeMode}=lib;
