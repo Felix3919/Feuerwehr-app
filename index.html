@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.20.1">
+<meta name="version" content="0.21.0">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -372,6 +372,8 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .tz-lbl{margin-top:3px;background:rgba(255,255,255,.94);color:#15181C;font:600 12px/1.3 "Barlow",sans-serif;padding:1px 6px;border-radius:3px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .ghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);opacity:.9}
 .lp-note{margin:0;font-size:14px;color:var(--muted)}
+.lp-layer{min-height:44px;min-width:96px;padding:0 16px;border:2px solid rgba(0,0,0,.25);border-radius:8px;background:#FFFFFF;color:#15181C;font:600 16px/1 "Barlow",system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.lp-layer:active{background:#ECEFF2}
 .lp-warn{margin:0;font-size:14px;font-weight:600;color:var(--red)}
 .lp-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .lp-tools .lp-note{flex:1;min-width:240px}
@@ -846,7 +848,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
       <button class="btn" id="lpCenter">Zum Einsatzort</button>
       <button class="btn" id="lpClear">Alles entfernen</button>
     </div>
-    <p class="lp-note" id="lpTiles" hidden>Kartenhintergrund nicht verfügbar (in der Vorschau oder ohne Internet). Die Symbole funktionieren trotzdem; auf GitHub Pages mit Internet erscheint die OpenStreetMap-Karte.</p>
+    <p class="lp-note" id="lpTiles" hidden>Kartenhintergrund nicht verfügbar (in der Vorschau oder ohne Internet). Die Symbole funktionieren trotzdem; auf GitHub Pages mit Internet erscheint die OpenStreetMap-Karte bzw. das Luftbild.</p>
   </section>
 </template>
 
@@ -902,7 +904,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.20.1";
+const APP_VERSION="0.21.0";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1189,7 +1191,7 @@ const SYM={
  AB:{c:"AB",t:"Absperrung",col:"#C25400"},
  NO:{c:"i",t:"Notiz",col:"#5B636D"}};
 const LP_DEF=[48.0457,16.4519]; /* Velm, falls die Adresse nicht gefunden wird */
-let lpMap=null,lpItems=[],lpFor=-1,lpView=null,lpEO=null,lpSel=null,lpSeq=0;
+let lpMap=null,lpItems=[],lpFor=-1,lpView=null,lpEO=null,lpSel=null,lpSeq=0,lpSat=false;
 const tzHtml=(k,lbl)=>{const s=SYM[k];return `<div class="tz"><span class="tz-box${s.fill?" fill":""}" style="--c:${s.col}">${s.c}</span>${lbl?`<span class="tz-lbl">${esc(lbl)}</span>`:""}</div>`;};
 const tzIcon=it=>L.divIcon({className:"tz-wrap",html:tzHtml(it.k,it.label||(it.k==="EO"?"":"")),iconSize:[0,0],iconAnchor:[0,0]});
 function lpAdd(it){
@@ -1213,8 +1215,19 @@ function initLage(){
  const key=alarm?alarmStart:0;
  if(lpFor!==key){lpFor=key;lpItems=[];lpView=null;lpEO=null;lpSel=null;}
  lpMap=L.map(el,{zoomSnap:.5});
- const tiles=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"}).addTo(lpMap);
- let warned=false;tiles.on("tileerror",()=>{if(!warned){warned=true;$("#lpTiles").hidden=false;}});
+ const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"});
+ /* Satellit: Orthofoto von basemap.at (Österreich, ca. 30 cm Auflösung, CC BY 4.0) + Straßennamen-Overlay */
+ const bmOpt={subdomains:["maps1","maps2","maps3","maps4"],maxZoom:19};
+ const ortho=L.tileLayer("https://{s}.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",{...bmOpt,attribution:"Orthofoto &copy; basemap.at"});
+ const sat=L.layerGroup([ortho,L.tileLayer("https://{s}.wien.gv.at/basemap/bmapoverlay/normal/google3857/{z}/{y}/{x}.png",bmOpt)]);
+ let warned=false;[osm,ortho].forEach(t=>t.on("tileerror",()=>{if(!warned){warned=true;$("#lpTiles").hidden=false;}}));
+ (lpSat?sat:osm).addTo(lpMap);
+ const LayerBtn=L.Control.extend({options:{position:"topright"},onAdd(){
+  const b=L.DomUtil.create("button","lp-layer");b.type="button";L.DomEvent.disableClickPropagation(b);
+  const lbl=()=>{b.textContent=lpSat?"Karte":"Satellit";b.setAttribute("aria-label",lpSat?"Zur Kartenansicht wechseln":"Zur Satellitenansicht wechseln");};lbl();
+  b.onclick=()=>{lpSat=!lpSat;lpMap.removeLayer(lpSat?osm:sat);(lpSat?sat:osm).addTo(lpMap);lbl();};
+  return b;}});
+ new LayerBtn().addTo(lpMap);
  lpMap.setView(lpView?lpView.c:(lpEO||LP_DEF),lpView?lpView.z:17);
  lpMap.on("moveend",()=>{lpView={c:lpMap.getCenter(),z:lpMap.getZoom()};});
  lpItems.forEach(lpAdd);
