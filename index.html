@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.22.0">
+<meta name="version" content="0.22.1">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -906,7 +906,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.22.0";
+const APP_VERSION="0.22.1";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1230,9 +1230,18 @@ function initLage(){
  const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"});
  /* Satellit: Orthofoto von basemap.at (Österreich, ca. 30 cm Auflösung, CC BY 4.0) + Straßennamen-Overlay */
  const bmOpt={subdomains:["maps1","maps2","maps3","maps4"],maxZoom:19};
- const ortho=L.tileLayer("https://{s}.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg",{...bmOpt,attribution:"Orthofoto &copy; basemap.at"});
- const sat=L.layerGroup([ortho,L.tileLayer("https://{s}.wien.gv.at/basemap/bmapoverlay/normal/google3857/{z}/{y}/{x}.png",bmOpt)]);
- let warned=false;[osm,ortho].forEach(t=>t.on("tileerror",()=>{if(!warned){warned=true;$("#lpTiles").hidden=false;}}));
+ /* basemap.at-Server der Reihe nach probieren, bis Luftbild-Kacheln laden */
+ const BM_HOSTS=["https://mapsneu.wien.gv.at","https://{s}.wien.gv.at","https://maps.wien.gv.at"];
+ let bmIdx=0,bmErr=0,bmOk=false;
+ const bmUrl=(lyr,ext)=>BM_HOSTS[bmIdx]+"/basemap/"+lyr+"/normal/google3857/{z}/{y}/{x}."+ext;
+ const ortho=L.tileLayer(bmUrl("bmaporthofoto30cm","jpeg"),{...bmOpt,attribution:"Orthofoto &copy; basemap.at"});
+ const bmOver=L.tileLayer(bmUrl("bmapoverlay","png"),bmOpt);
+ const sat=L.layerGroup([ortho,bmOver]);
+ ortho.on("tileload",()=>{bmOk=true;});
+ ortho.on("tileerror",()=>{if(bmOk)return;
+  if(++bmErr>=3&&bmIdx<BM_HOSTS.length-1){bmIdx++;bmErr=0;console.warn("basemap.at: wechsle auf",BM_HOSTS[bmIdx]);
+   ortho.setUrl(bmUrl("bmaporthofoto30cm","jpeg"));bmOver.setUrl(bmUrl("bmapoverlay","png"));}});
+ let warned=false;[osm,ortho].forEach(t=>t.on("tileerror",()=>{if(t===ortho&&(bmOk||bmIdx<BM_HOSTS.length-1))return;if(!warned){warned=true;$("#lpTiles").hidden=false;}}));
  (lpSat?sat:osm).addTo(lpMap);
  const LayerBtn=L.Control.extend({options:{position:"topright"},onAdd(){
   const b=L.DomUtil.create("button","lp-layer");b.type="button";L.DomEvent.disableClickPropagation(b);
