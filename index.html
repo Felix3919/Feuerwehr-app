@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.22.1">
+<meta name="version" content="0.23.1">
 <title>Einsatz FF Velm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -906,7 +906,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.22.1";
+const APP_VERSION="0.23.1";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1226,10 +1226,10 @@ function initLage(){
  if(!window.L){el.innerHTML='<p class="lp-note" style="padding:16px">Die Kartenbibliothek konnte nicht geladen werden.</p>';return;}
  const key=alarm?alarmStart:0;
  if(lpFor!==key){lpFor=key;lpItems=[];lpView=null;lpEO=null;lpSel=null;}
- lpMap=L.map(el,{zoomSnap:.5});
- const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"});
+ lpMap=L.map(el,{zoomSnap:.5,maxZoom:22});
+ const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:22,maxNativeZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"});
  /* Satellit: Orthofoto von basemap.at (Österreich, ca. 30 cm Auflösung, CC BY 4.0) + Straßennamen-Overlay */
- const bmOpt={subdomains:["maps1","maps2","maps3","maps4"],maxZoom:19};
+ const bmOpt={subdomains:["maps1","maps2","maps3","maps4"],maxZoom:22,maxNativeZoom:19};
  /* basemap.at-Server der Reihe nach probieren, bis Luftbild-Kacheln laden */
  const BM_HOSTS=["https://mapsneu.wien.gv.at","https://{s}.wien.gv.at","https://maps.wien.gv.at"];
  let bmIdx=0,bmErr=0,bmOk=false;
@@ -1458,7 +1458,10 @@ async function renderRoute(){
  if(id!==routeReq||view!=="navigation"||alarm!==a||!$("#rMap"))return;
  if(!r.path)return say("Route konnte nicht berechnet werden ("+r.err+")");
  const {Map,Polyline}=await google.maps.importLibrary("maps");
- const map=new Map(box,{center:d,zoom:14,disableDefaultUI:true,zoomControl:true,fullscreenControl:true,gestureHandling:"greedy"});
+ let rType="hybrid";try{rType=localStorage.getItem("navMapType")||"hybrid";}catch(e){}
+ const map=new Map(box,{center:d,zoom:14,mapTypeId:rType,disableDefaultUI:true,zoomControl:true,fullscreenControl:true,gestureHandling:"greedy",
+  mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:["roadmap","hybrid"],position:google.maps.ControlPosition.TOP_LEFT}});
+ map.addListener("maptypeid_changed",()=>{try{localStorage.setItem("navMapType",map.getMapTypeId());}catch(e){}});
  new Polyline({map,path:r.path,strokeColor:"#B3261E",strokeOpacity:0.9,strokeWeight:6});
  if(google.maps.Marker){new google.maps.Marker({map,position:{lat:o.lat,lng:o.lng},label:"S",title:"Start"});
   new google.maps.Marker({map,position:{lat:d.lat,lng:d.lng},label:"Z",title:"Einsatzort"});}
