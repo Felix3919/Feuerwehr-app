@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.27.1">
+<meta name="version" content="0.28.0">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -991,7 +991,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.27.1";
+const APP_VERSION="0.28.0";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1399,7 +1399,7 @@ function loadRoads(){
  if(!window.L||!navigator.onLine){rState="fail";return;}
  rState="load";
  const b=L.latLngBounds(DATA.map(ll)).pad(.35),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(",");
- const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out tags geom;`;
+ const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out geom;`;
  const urls=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
  const tryU=i=>fetch(urls[i],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}}).then(r=>{if(!r.ok)throw 0;return r.json();}).catch(e=>{if(i+1<urls.length)return tryU(i+1);throw e;});
  tryU(0).then(j=>{const n={},w=[];
@@ -1455,13 +1455,31 @@ function mk(h){
  if(st.show.ids||sel)m.bindTooltip(h.id,{permanent:true,direction:"right",offset:[10,0],className:"hp-tt"});
  m.on("click",e=>{if(placing){setEO(e.latlng);return;}select(h.id,false);});
  return m;}
+/* Leitung in einzelne B-Schläuche (20 m) teilen, vom Hydranten aus */
+function cutLine(line,len){
+ const segs=[];let cur=[line[0]],acc=0;
+ for(let i=1;i<line.length;i++){let a=L.latLng(cur[cur.length-1]),b=L.latLng(line[i]),d=a.distanceTo(b);
+  while(d>0&&acc+d>=len){const f=(len-acc)/d,p=[a.lat+(b.lat-a.lat)*f,a.lng+(b.lng-a.lng)*f];cur.push(p);segs.push(cur);cur=[p];a=L.latLng(p);d=a.distanceTo(b);acc=0;}
+  cur.push(line[i]);acc+=d;}
+ if(cur.length>1&&acc>.5)segs.push(cur);
+ return segs;}
+function drawHoses(line,d){
+ const segs=cutLine(line,B_LEN);
+ segs.forEach((s,i)=>{
+  L.polyline(s,{color:"#15181C",weight:10,opacity:.9,lineCap:"butt",interactive:false}).addTo(lay);
+  L.polyline(s,{color:i%2?"#E3D3AE":"#FFFFFF",weight:6,opacity:1,lineCap:"butt",interactive:false}).addTo(lay);});
+ /* Kupplungen zwischen den Schläuchen und an beiden Enden */
+ const ks=segs.map(s=>s[0]);if(segs.length)ks.push(segs[segs.length-1].slice(-1)[0]);
+ ks.forEach(k=>L.circleMarker(k,{radius:5,color:"#15181C",weight:2,fillColor:"#9AA3AD",fillOpacity:1,interactive:false}).addTo(lay));
+ L.polyline(line,{opacity:0,interactive:false}).addTo(lay).bindTooltip(`${fmt(d)}, ${hoses(d).b}× B`,{permanent:true,direction:"center",className:"hp-dist",offset:[0,-16]});}
 function draw(){
  if(!map||!lay)return;
  lay.clearLayers();
- if(st.eo)nearest().forEach((n,i)=>{
-  const r=route(),line=r&&r.to[n.h.id]?r.to[n.h.id].line:[st.eo,ll(n.h)];
-  const p=L.polyline(line,{color:n.h.typ==="S"?"#1F5FA8":"#15181C",weight:i?2.5:4,dashArray:i?"7 6":null,opacity:.85,interactive:false}).addTo(lay);
-  if(i===0||n.h.typ==="S")p.bindTooltip(n.h.typ==="S"?fmt(n.d):`${fmt(n.d)}, ${hoses(n.d).b}× B`,{permanent:true,direction:"center",className:"hp-dist"});});
+ if(st.eo){
+  const r=route(),near=nearest(),lineOf=h=>r&&r.to[h.id]?r.to[h.id].line:[st.eo,ll(h)],dOf=h=>r&&r.to[h.id]?r.to[h.id].d:dist(st.eo,ll(h));
+  const tgt=DATA.find(h=>h.id===st.sel)||(near[0]&&near[0].h);
+  near.forEach(n=>{if(tgt&&n.h.id===tgt.id)return;L.polyline(lineOf(n.h),{color:"#15181C",weight:2.5,dashArray:"7 6",opacity:.7,interactive:false}).addTo(lay);});
+  if(tgt)drawHoses(lineOf(tgt).slice().reverse(),dOf(tgt));}
  DATA.filter(h=>vis(h)&&h.id!==st.sel).forEach(h=>mk(h).addTo(lay));
  const s=DATA.find(h=>h.id===st.sel);if(s&&vis(s))mk(s).addTo(lay);
  if(st.eo){const e=L.marker(st.eo,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[36,44],iconAnchor:[18,40],html:PIN})}).addTo(lay);
