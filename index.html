@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.28.1">
+<meta name="version" content="0.28.3">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -969,7 +969,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
           <h2>Legende</h2>
           <div class="hp-leg" id="hpLeg"></div>
         </div>
-        <p class="lp-note">Alle Hydranten, Nennweiten und Hinweise sind frei erfundene Demo-Daten. Die Hydranten werden auf die nächste Straße gesetzt. Schlauchbedarf: vom Hydranten über die Straße bis zum Fahrzeug vor dem Grundstück (OpenStreetMap), aufgerundet auf ganze B-Schläuche zu 20 m bzw. C-Schläuche zu 15 m.</p>
+        <p class="lp-note">Alle Hydranten, Nennweiten und Hinweise sind frei erfundene Demo-Daten. Die Hydranten werden auf die nächste Fahrstraße gesetzt, schmale Zufahrten zu Grundstücken werden nicht verwendet. Schlauchbedarf: vom Hydranten über die Straße bis zum Fahrzeug vor dem Grundstück (OpenStreetMap), aufgerundet auf ganze B-Schläuche zu 20 m bzw. C-Schläuche zu 15 m.</p>
         <p class="lp-note" id="hpTiles" hidden>Kartenhintergrund nicht verfügbar (in der Vorschau oder ohne Internet). Auf GitHub Pages mit Internet erscheint die OpenStreetMap-Karte bzw. das Luftbild.</p>
       </div>
     </div>
@@ -992,7 +992,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.28.1";
+const APP_VERSION="0.28.3";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1389,11 +1389,11 @@ function buildRoads(raw){
  const N=new Map(),E=new Map(),segs=[];
  Object.entries(raw.n).forEach(([id,p])=>N.set(+id,p));
  const add=(a,b,l)=>{if(!E.has(a))E.set(a,[]);E.get(a).push([b,l]);};
- raw.w.forEach(x=>{const [w,svc]=Array.isArray(x[0])?x:[x,0];for(let i=1;i<w.length;i++){const a=w[i-1],b=w[i],pa=N.get(a),pb=N.get(b);if(!pa||!pb)continue;
+ raw.w.forEach(x=>{const [w,svc]=Array.isArray(x[0])?x:[x,0];if(svc)return;/* schmale Zufahrten (highway=service) gehören zu Grundstücken: kein Fahrzeug, keine Schläuche */for(let i=1;i<w.length;i++){const a=w[i-1],b=w[i],pa=N.get(a),pb=N.get(b);if(!pa||!pb)continue;
   const l=L.latLng(pa).distanceTo(L.latLng(pb));add(a,b,l);add(b,a,l);segs.push([a,b,l,svc]);}});
  return{N,E,segs};}
-/* Hydrant liegt immer auf der Straße: auf die nächste öffentliche Straße setzen (Zufahrten nur, wenn keine Straße in 60 m) */
-function placeHyd(){DATA.forEach(h=>{const p=[h.lat,h.lng],a=snap(p,true),b=a&&a.d<=60?a:snap(p,false);if(b)h._p=b.pt;});}
+/* Hydrant liegt immer auf einer Fahrstraße (Zufahrten sind schon ausgeschlossen) */
+function placeHyd(){DATA.forEach(h=>{const b=snap([h.lat,h.lng],false);if(b)h._p=b.pt;});}
 function loadRoads(){
  if(rState!=="none")return;
  try{const c=JSON.parse(localStorage.getItem(RKEY));if(c&&c.n){R=buildRoads(c);placeHyd();rState="ok";return;}}catch(e){}
@@ -1401,14 +1401,16 @@ function loadRoads(){
  const legacy=()=>{try{const c=JSON.parse(localStorage.getItem("hpRoads1"));if(c&&c.n){R=buildRoads(c);placeHyd();rState="ok";rRes=null;draw();side();return true;}}catch(e){}return false;};
  if(!window.L||!navigator.onLine){if(!legacy()){rState="fail";side();}return;}
  rState="load";
- const b=L.latLngBounds(DATA.map(ll)).pad(.35),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(",");
- const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out geom;`;
+ const b=L.latLngBounds(DATA.map(ll)).pad(.15),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(",");
+ const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out geom qt;`;
  const urls=["https://overpass-api.de/api/interpreter","https://overpass.private.coffee/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
- const tryU=i=>{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),20000);
-  return fetch(urls[i],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ac.signal})
-   .then(r=>{clearTimeout(to);if(!r.ok)throw 0;return r.json();}).then(j=>{if(!j||!(j.elements||[]).some(e=>e.type==="way"&&e.nodes&&e.geometry))throw 0;return j;})
-   .catch(e=>{clearTimeout(to);if(i+1<urls.length)return tryU(i+1);throw e;});};
- tryU(0).then(j=>{const n={},w=[];
+ /* alle Server gleichzeitig fragen, der schnellste gewinnt */
+ const tryU=()=>new Promise((res,rej)=>{let left=urls.length;const acs=[];
+  urls.forEach(u=>{const ac=new AbortController();acs.push(ac);const to=setTimeout(()=>ac.abort(),25000);
+   fetch(u,{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ac.signal})
+    .then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{if(!j||!(j.elements||[]).some(e=>e.type==="way"&&e.nodes&&e.geometry))throw 0;clearTimeout(to);acs.forEach(a=>{if(a!==ac)a.abort();});res(j);})
+    .catch(()=>{clearTimeout(to);if(--left===0)rej(0);});});});
+ tryU().then(j=>{const n={},w=[];
    (j.elements||[]).forEach(e=>{if(e.type!=="way"||!e.geometry||!e.nodes)return;e.nodes.forEach((id,i)=>{n[id]=[+e.geometry[i].lat.toFixed(6),+e.geometry[i].lon.toFixed(6)];});w.push([e.nodes,e.tags&&e.tags.highway==="service"?1:0]);});
    if(!w.length)throw 0;const raw={n,w};try{localStorage.setItem(RKEY,JSON.stringify(raw));}catch(e){}
    R=buildRoads(raw);placeHyd();rState="ok";rRes=null;draw();side();})
@@ -1509,7 +1511,7 @@ function select(id,center){st.sel=id;
  draw();side();}
 function setPlacing(v){placing=v;side();}
 function setEO(p){st.eo=[p.lat,p.lng];rRes=null;const n=nearest();st.sel=n.length?n[0].h.id:null;placing=false;draw();side();}
-return function(){
+const init=function(){
  const key=alarm?alarmStart:0,fresh=st.key!==key;
  if(fresh){st.key=key;st.eo=null;st.sel=null;st.view=null;}
  placing=false;
@@ -1554,7 +1556,11 @@ return function(){
  loadRoads();
  draw();side();
  setTimeout(()=>map.invalidateSize(),0);};
+init.preload=loadRoads;
+return init;
 })();
+/* Straßennetz schon beim App-Start im Hintergrund laden, damit der Hydrantenplan sofort bereit ist */
+setTimeout(()=>{try{initHyd.preload();}catch(e){}},800);
 
 /* Chat mit anderen Feuerwehren (Vorschau: lokal, ohne Server) */
 const QUICK=["Rücken aus","Am Einsatzort eingetroffen","Benötigen Unterstützung","Lage unter Kontrolle","Einsatz beendet, rücken ein"];
