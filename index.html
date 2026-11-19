@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.29.1">
+<meta name="version" content="0.31.0">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -250,14 +250,26 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 
 /* 3D-Ansicht Einsatzort */
-.m3d-wrap{position:relative;height:min(60vh,540px);min-height:300px;margin:14px -18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;overflow:hidden;background:var(--bg)}
+.m3d-wrap{position:relative;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px;overflow:hidden;background:var(--bg)}
+/* Navigation randlos: 3D-Ansicht füllt den ganzen rechten Bereich */
+main.bleed{padding:0;gap:0}
+main.bleed .foot-m{padding:0 16px 16px}
+.card.nav-card{border:0;border-radius:0;padding:0;gap:0}
+.nav-off{display:grid;gap:12px;padding:16px 18px}
+.nav-box{position:absolute;top:12px;left:12px;z-index:2;display:grid;gap:8px;justify-items:start;max-width:calc(100% - 24px);padding:12px 14px;background:var(--surface);color:var(--ink);border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.28)}
+.nav-title{display:flex;align-items:center;gap:6px;margin:0;font:700 20px/1 "Barlow Condensed",sans-serif;color:var(--muted)}
+.nav-title svg{width:20px;height:20px;color:var(--red)}
+.nav-box .dest{padding:2px 0 2px 10px;border-left-width:3px}
+.nav-box .dest b{font-size:24px}
+.nav-box .btn{min-height:44px}
+@media (max-width:760px){.m3d-wrap{height:70dvh}}
 .m3d{position:absolute;inset:0}
 .m3d gmp-map-3d{display:block;width:100%;height:100%}
 .m3d-msg{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:20px;text-align:center;color:var(--muted);max-width:none}
 .m3d-spin{position:absolute;top:10px;right:10px;z-index:2}
 
 /* Route unter dem 3D-Modell */
-.route{margin-top:18px}
+.route{padding:16px 18px}
 .route-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
 .route-head h3{margin:0;font-size:22px;font-weight:700}
 .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
@@ -437,6 +449,39 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .hp-alt{color:var(--muted);font-weight:500;font-size:14px}
 .foot-m{display:none;color:var(--muted);font-size:14px;padding:0 4px}
 @media (max-width:760px){.foot-m{display:block}}
+
+/* ===== Design: alle Unterpunkte randlos, Überschrift als Kästchen ===== */
+main.bleed{padding:0;gap:0;background:var(--surface)}
+main.bleed .card,main.bleed .stage{border:0;border-radius:0;border-bottom:1px solid var(--line)}
+main.bleed .card.nav-card{border-bottom:0}
+main.bleed .ats{gap:0}
+main.bleed .demo{margin:14px 18px}
+main.bleed .foot-m{padding:0 18px 16px}
+.ph-box{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:8px;background:var(--bg);min-width:0}
+main.bleed .page-head{gap:8px}
+main.bleed .page-head svg{width:20px;height:20px}
+main.bleed .page-head h1{font-size:20px;line-height:1;color:var(--muted)}
+/* Karten-Unterpunkte: Karte füllt den Bereich, Überschrift schwebt darüber */
+main.bleed .card.lp,main.bleed .card.hp{position:relative;padding:0;gap:0}
+main.bleed .lp>.page-head,main.bleed .hp>.page-head{position:absolute;top:12px;z-index:2;max-width:calc(100% - 24px);flex-wrap:wrap;padding:6px;border-radius:10px;background:var(--surface);box-shadow:0 2px 12px rgba(0,0,0,.28)}
+main.bleed .lp>.page-head{left:222px}
+main.bleed .hp>.page-head{left:12px}
+main.bleed .lp>.page-head .ph-box,main.bleed .hp>.page-head .ph-box{background:none;padding:4px 6px}
+main.bleed .lp-body,main.bleed .hp-body{gap:0;align-items:stretch}
+main.bleed #lpMap,main.bleed #hpMap{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:400px;border:0;border-radius:0}
+main.bleed .lp .leaflet-top.leaflet-left,main.bleed .hp .leaflet-top.leaflet-left{top:62px}
+main.bleed .palette{padding:12px;border-right:1px solid var(--line);overflow-y:auto;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+main.bleed .hp-side{padding:14px 16px;border-left:1px solid var(--line);overflow-y:auto;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+main.bleed .lp>.lp-warn,main.bleed .hp>.lp-warn{order:2;padding:12px 18px 0}
+main.bleed .lp>.lp-tools{order:3;padding:12px 18px}
+main.bleed .lp>.lp-note{order:4;padding:0 18px 14px}
+@media (max-width:900px){
+  main.bleed .lp>.page-head,main.bleed .hp>.page-head{position:static;margin:12px;box-shadow:none;padding:0;background:none}
+  main.bleed .lp .leaflet-top.leaflet-left,main.bleed .hp .leaflet-top.leaflet-left{top:0}
+  main.bleed #lpMap,main.bleed #hpMap{height:70dvh}
+  main.bleed .palette{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+  main.bleed .hp-side{max-height:none;border-left:0;border-top:1px solid var(--line)}
+}
 </style>
 </head>
 <body>
@@ -499,14 +544,16 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 </template>
 
 <template id="tpl-navigation">
-  <section class="card">
-    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><h1>Navigation</h1></div>
+  <section class="card nav-card">
     <div id="navOn" hidden>
-      <div class="dest"><b id="nAddr"></b><span id="nCity"></span></div>
-      <div class="actions" style="margin-top:14px"><a class="btn primary" id="nGo" target="_blank" rel="noopener">Route in Google Maps öffnen</a></div>
       <div class="m3d-wrap">
         <div class="m3d" id="m3d"></div>
         <p class="m3d-msg" id="m3dMsg"></p>
+        <div class="nav-box">
+          <h1 class="nav-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Navigation</h1>
+          <div class="dest"><b id="nAddr"></b><span id="nCity"></span></div>
+          <a class="btn primary" id="nGo" target="_blank" rel="noopener">Route in Google Maps öffnen</a>
+        </div>
         <button class="btn m3d-spin" id="m3dSpin" aria-pressed="true" hidden>Drehung anhalten</button>
       </div>
       <section class="route" aria-label="Route zum Einsatzort">
@@ -524,7 +571,10 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
         <ol class="steps" id="rSteps"></ol>
       </section>
     </div>
-    <p class="muted" id="navOff">Keine aktive Alarmierung. Bei einem Alarm wird der Einsatzort hier automatisch als Ziel übernommen.</p>
+    <div class="nav-off" id="navOff">
+      <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><h1>Navigation</h1></div>
+      <p class="muted">Keine aktive Alarmierung. Bei einem Alarm wird der Einsatzort hier automatisch als Ziel übernommen.</p>
+    </div>
   </section>
 </template>
 
@@ -996,7 +1046,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.29.1";
+const APP_VERSION="0.31.0";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1087,8 +1137,9 @@ function show(id){
  if(alarm&&v.tool&&!vis(v))extra.add(v.id);
  if(v.id==="chat")unread=0;
  renderSide();
- const m=$("#main");m.innerHTML="";
+ const m=$("#main");m.innerHTML="";m.classList.add("bleed");
  m.appendChild($("#tpl-"+(v.tpl||"geplant")).content.cloneNode(true));
+ m.querySelectorAll(".page-head").forEach(h=>{const t=h.querySelector("h1");if(!t||t.parentElement!==h)return;const b=document.createElement("span");b.className="ph-box";const ic=t.previousElementSibling;h.insertBefore(b,ic||t);if(ic)b.appendChild(ic);b.appendChild(t);});
  m.insertAdjacentHTML("beforeend",'<div class="foot-m">Made by Felix Horak, v'+APP_VERSION+'</div>');
  if(!v.tpl){$("#pIcon").innerHTML=I[v.i];$("#pTitle").textContent=v.t;$("#pText").textContent=v.text;}
  if(v.id==="alarmierung")initAlarmView();
