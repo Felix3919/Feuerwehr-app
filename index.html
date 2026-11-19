@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.23.1">
+<meta name="version" content="0.26.0">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -391,6 +391,49 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .lp-pop .btn{min-height:42px;padding:0 14px;color:#15181C;background:#FFFFFF;border-color:#C7CDD4}
 .lp-pop .btn.primary{background:#B3261E;border-color:#B3261E;color:#FFFFFF}
 
+/* Hydrantenplan */
+.hp{gap:12px}
+.hp .page-head{flex-wrap:wrap}
+.hp-demo{background:var(--soft);color:var(--red)}
+.hp-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;align-items:start}
+@media (max-width:900px){.hp-body{grid-template-columns:1fr}}
+.hp-mapwrap{position:relative}
+#hpMap{height:min(72vh,680px);min-height:380px;border-radius:8px;border:1px solid var(--line);z-index:0}
+#hpMap.leaflet-container{background-color:#E4E8EC;background-image:linear-gradient(#CDD3D9 1px,transparent 1px),linear-gradient(90deg,#CDD3D9 1px,transparent 1px);background-size:40px 40px;font-family:"Barlow",system-ui,sans-serif}
+.hp-placing #hpMap,.hp-placing #hpMap .leaflet-interactive{cursor:crosshair}
+.hp-hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;background:#15181C;color:#FFFFFF;padding:8px 14px;border-radius:8px;font-weight:600;display:none;white-space:nowrap;font-size:15px;pointer-events:none}
+.hp-placing .hp-hint{display:block}
+.hp-tt{background:#FFFFFF;border:1px solid #C7CDD4;border-radius:4px;padding:1px 5px;color:#15181C;font:700 14px/1.2 "Barlow Condensed",sans-serif;box-shadow:none}
+.hp-tt::before{display:none}
+.hp-dist{background:#15181C;border:0;border-radius:4px;padding:2px 6px;color:#FFFFFF;font:700 15px/1.2 "Barlow Condensed",sans-serif;box-shadow:none}
+.hp-dist::before{display:none}
+.hp-side{display:grid;gap:14px}
+.hp-sec h2{margin:0 0 8px;font:700 22px/1.1 "Barlow Condensed",sans-serif}
+.hp-btns{display:flex;gap:8px}
+.hp-btns .btn{flex:1;justify-content:center}
+.hp-sec .lp-note{margin-top:8px}
+.hp-near{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.hp-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);text-align:left;cursor:pointer}
+.hp-row.sel{border-color:var(--red);background:var(--soft)}
+.hp-row .t{display:flex;flex-direction:column;min-width:0}
+.hp-row .t b{font-weight:600}
+.hp-row .t span{font-size:14px;color:var(--muted)}
+.hp-row .d{margin-left:auto;font:700 22px/1 "Barlow Condensed",sans-serif;white-space:nowrap}
+.hp-ico{flex:none;width:26px;height:26px}
+.hp-big{display:flex;align-items:center;gap:10px;font:700 30px/1 "Barlow Condensed",sans-serif;margin-bottom:8px}
+.hp-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0}
+.hp-dl dt{color:var(--muted)}
+.hp-dl dd{margin:0;font-weight:600}
+.hp-note{margin-top:10px;padding:8px 10px;border-radius:6px;background:var(--bg);font-weight:600}
+.hp-note.bad{background:var(--soft);color:var(--red)}
+.hp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hp-chip{display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
+.hp-chip[aria-pressed="false"]{opacity:.45}
+.hp-chip .hp-ico{width:20px;height:20px}
+.hp-leg{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:15px}
+.hp-leg .hp-ico{width:22px;height:22px}
+.hp-hose{color:var(--ink);font-weight:700}
+.hp-alt{color:var(--muted);font-weight:500;font-size:14px}
 .foot-m{display:none;color:var(--muted);font-size:14px;padding:0 4px}
 @media (max-width:760px){.foot-m{display:block}}
 </style>
@@ -896,6 +939,42 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
   </div>
 </template>
 
+<template id="tpl-hydranten">
+  <section class="card hp">
+    <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M9 21V9h6v12M8 9h8M10 9V6a2 2 0 0 1 4 0v3M6 13h3M15 13h3"/></svg><h1>Hydrantenplan</h1><span class="tag" id="hpTag"></span><span class="tag hp-demo">Demo-Daten</span></div>
+    <p class="lp-warn" id="hpGeo" hidden>Adresse wurde auf der Karte nicht gefunden. Einsatzort bitte selbst setzen.</p>
+    <div class="hp-body">
+      <div class="hp-mapwrap">
+        <div id="hpMap" aria-label="Karte mit Hydranten"></div>
+        <div class="hp-hint">Auf die Karte tippen, um den Einsatzort zu setzen</div>
+      </div>
+      <div class="hp-side">
+        <div class="hp-sec">
+          <h2>Einsatzort</h2>
+          <div class="hp-btns"><button type="button" class="btn primary" id="hpPlace">Einsatzort setzen</button><button type="button" class="btn" id="hpClear" hidden>Löschen</button></div>
+          <p class="lp-note" id="hpInfo"></p>
+          <ol class="hp-near" id="hpNear"></ol>
+        </div>
+        <div class="hp-sec" id="hpDetSec" hidden>
+          <h2>Ausgewählt</h2>
+          <div id="hpDet"></div>
+        </div>
+        <div class="hp-sec">
+          <h2>Anzeigen</h2>
+          <div class="hp-chips" id="hpChips"></div>
+          <p class="lp-note" id="hpStat"></p>
+        </div>
+        <div class="hp-sec">
+          <h2>Legende</h2>
+          <div class="hp-leg" id="hpLeg"></div>
+        </div>
+        <p class="lp-note">Alle Hydranten, Nennweiten und Hinweise sind frei erfundene Demo-Daten. Schlauchbedarf: Weg über die Straße (OpenStreetMap), aufgerundet auf ganze B-Schläuche zu 20 m bzw. C-Schläuche zu 15 m.</p>
+        <p class="lp-note" id="hpTiles" hidden>Kartenhintergrund nicht verfügbar (in der Vorschau oder ohne Internet). Auf GitHub Pages mit Internet erscheint die OpenStreetMap-Karte bzw. das Luftbild.</p>
+      </div>
+    </div>
+  </section>
+</template>
+
 <template id="tpl-geplant">
   <section class="card">
     <div class="page-head"><span id="pIcon"></span><h1 id="pTitle"></h1><span class="tag">Geplant</span></div>
@@ -912,7 +991,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.23.1";
+const APP_VERSION="0.26.0";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -938,7 +1017,7 @@ const VIEWS=[
  {id:"navigation",t:"Navigation",i:"navi",tpl:"navigation",tool:true,need:()=>true},
  {id:"chat",t:"Chat",sub:"mit anderen Feuerwehren",i:"chat",tpl:"chat",tool:true,need:(a,l,al)=>al.units.includes(",")},
  {id:"lageplan",t:"Lageplan",sub:"Großeinsatz",i:"lage",tpl:"lage",tool:true,need:(a,l,al)=>l>=4||al.units.split(",").length>=4},
- {id:"hydranten",t:"Hydrantenplan",i:"hydrant",tool:true,need:(a,l)=>a==="B"&&l>=2,text:"Hydranten im Einsatzgebiet auf einer Karte, mit den nächstgelegenen zum Einsatzort."},
+ {id:"hydranten",t:"Hydrantenplan",i:"hydrant",tool:true,need:(a,l)=>a==="B"&&l>=2,tpl:"hydranten"},
  {id:"gefahrstoffe",t:"Gefährliche Stoffe",i:"gefahr",tool:true,need:(a,l)=>a==="S"||(a==="B"&&l>=3)||(a==="T"&&l>=2),tpl:"gefahr"},
  {id:"atemschutz",t:"Atemschutzüberwachung",i:"ats",tool:true,need:(a,l)=>(a==="B"&&l>=1)||(a==="S"&&l>=2)||(a==="T"&&l>=3),tpl:"atemschutz"},
  {id:"fahrzeuge",t:"Fahrzeuge & Beladung",i:"fzg",tool:true,need:(a,l)=>a==="T"||a==="S"||(a==="B"&&l>=3),text:"Beladepläne der Fahrzeuge: wo welches Gerät verlastet ist."},
@@ -1014,6 +1093,7 @@ function show(id){
  if(v.id==="lageplan")initLage();
  if(v.id==="gefahrstoffe")initGef();
  if(v.id==="atemschutz")initAts();
+ if(v.id==="hydranten")initHyd();
  if(location.hash.slice(1)!==v.id)history.replaceState(null,"","#"+v.id);
  scrollTo({top:0});
 }
@@ -1286,6 +1366,169 @@ function initLage(){
   lpItems.filter(i=>i.k!=="EO").forEach(i=>lpMap.removeLayer(i.m));lpItems=lpItems.filter(i=>i.k==="EO");};
  lpMarkSel();
  setTimeout(()=>lpMap.invalidateSize(),0);}
+
+/* Hydrantenplan (Demo): OpenStreetMap-Karte, Hydranten frei erfunden */
+const initHyd=(()=>{
+const G={"h": [{"id": "H-01", "lage": "Am Graben", "typ": "U", "dn": 100, "lat": 48.047099, "lng": 16.445664}, {"id": "H-02", "lage": "Anningerstraße", "typ": "U", "dn": 80, "lat": 48.04664, "lng": 16.450707}, {"id": "H-03", "lage": "Birkengasse", "typ": "U", "dn": 80, "lat": 48.04707, "lng": 16.451651}, {"id": "H-04", "lage": "Brennereiweg", "typ": "U", "dn": 80, "lat": 48.041605, "lng": 16.445578}, {"id": "H-05", "lage": "Brennereiweg", "typ": "U", "dn": 80, "lat": 48.042035, "lng": 16.446286}, {"id": "H-06", "lage": "Brunngasse", "typ": "U", "dn": 80, "lat": 48.044804, "lng": 16.44193}, {"id": "H-07", "lage": "Buchengasse", "typ": "U", "dn": 80, "lat": 48.043828, "lng": 16.443518}, {"id": "H-08", "lage": "Erlengasse", "typ": "U", "dn": 80, "lat": 48.040299, "lng": 16.441051}, {"id": "H-09", "lage": "Feldstraße", "typ": "U", "dn": 80, "lat": 48.048204, "lng": 16.451565}, {"id": "H-10", "lage": "Feldstraße", "typ": "U", "dn": 80, "lat": 48.04773, "lng": 16.452852}, {"id": "H-11", "lage": "Fliedergasse / Tulpengasse", "typ": "U", "dn": 80, "lat": 48.04806, "lng": 16.449269}, {"id": "H-12", "lage": "Fliedergasse", "typ": "U", "dn": 80, "lat": 48.047573, "lng": 16.448797}, {"id": "H-13", "lage": "Gartengasse", "typ": "U", "dn": 80, "lat": 48.045765, "lng": 16.446673}, {"id": "H-14", "lage": "Im Winkel", "typ": "U", "dn": 80, "lat": 48.040744, "lng": 16.442918}, {"id": "H-15", "lage": "Im Winkel", "typ": "U", "dn": 80, "lat": 48.041217, "lng": 16.443604}, {"id": "H-16", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.045564, "lng": 16.439999}, {"id": "H-17", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.04489, "lng": 16.439785}, {"id": "H-18", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.046124, "lng": 16.442317}, {"id": "H-19", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.045148, "lng": 16.440943}, {"id": "H-20", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.044574, "lng": 16.440858}, {"id": "H-21", "lage": "Kaplangasse", "typ": "U", "dn": 80, "lat": 48.045952, "lng": 16.443154}, {"id": "H-22", "lage": "Kirchengasse", "typ": "O", "dn": 100, "lat": 48.0473, "lng": 16.444548}, {"id": "H-23", "lage": "Kirchengasse", "typ": "U", "dn": 100, "lat": 48.046439, "lng": 16.445085}, {"id": "H-24", "lage": "Kirchengasse / Kaplangasse", "typ": "U", "dn": 100, "lat": 48.045894, "lng": 16.445407}, {"id": "H-25", "lage": "Kirchengasse / Krautfeldgasse", "typ": "U", "dn": 100, "lat": 48.045306, "lng": 16.445793}, {"id": "H-26", "lage": "Kirchengasse", "typ": "O", "dn": 100, "lat": 48.04446, "lng": 16.445278}, {"id": "H-27", "lage": "Kirchengasse", "typ": "U", "dn": 100, "lat": 48.04347, "lng": 16.444291}, {"id": "H-28", "lage": "Kirchengasse", "typ": "U", "dn": 100, "lat": 48.044216, "lng": 16.44663}, {"id": "H-29", "lage": "Lindengasse", "typ": "U", "dn": 80, "lat": 48.044158, "lng": 16.442124}, {"id": "H-30", "lage": "Neilkengasse", "typ": "U", "dn": 80, "lat": 48.038994, "lng": 16.444613}, {"id": "H-31", "lage": "Rosengasse", "typ": "U", "dn": 80, "lat": 48.047185, "lng": 16.453131}, {"id": "H-32", "lage": "Rosengasse", "typ": "U", "dn": 80, "lat": 48.045995, "lng": 16.451393}, {"id": "H-33", "lage": "Rosengasse", "typ": "U", "dn": 80, "lat": 48.046726, "lng": 16.452595}, {"id": "H-34", "lage": "Schlosspark", "typ": "U", "dn": 80, "lat": 48.042351, "lng": 16.437918}, {"id": "H-35", "lage": "Schlosspark", "typ": "U", "dn": 80, "lat": 48.041806, "lng": 16.437467}, {"id": "H-36", "lage": "Schlosspark", "typ": "U", "dn": 80, "lat": 48.040342, "lng": 16.436158}, {"id": "H-37", "lage": "Schlosspark", "typ": "U", "dn": 80, "lat": 48.041533, "lng": 16.438669}, {"id": "H-38", "lage": "Schlosspark", "typ": "U", "dn": 80, "status": "defekt", "hinweis": "Außer Betrieb, Reparatur beauftragt", "lat": 48.03984, "lng": 16.436609}, {"id": "H-39", "lage": "Schlosspark", "typ": "U", "dn": 80, "lat": 48.040514, "lng": 16.439162}, {"id": "H-40", "lage": "Siedlungsstraße / Am Graben", "typ": "U", "dn": 100, "lat": 48.046525, "lng": 16.447381}, {"id": "H-41", "lage": "Siedlungsstraße", "typ": "O", "dn": 100, "lat": 48.046066, "lng": 16.448754}, {"id": "H-42", "lage": "Siedlungsstraße / Tannengasse", "typ": "U", "dn": 100, "lat": 48.045765, "lng": 16.449634}, {"id": "H-43", "lage": "Stadelgasse / Rosenhof", "typ": "U", "dn": 100, "lat": 48.04446, "lng": 16.449956}, {"id": "H-44", "lage": "Stadelgasse", "typ": "U", "dn": 100, "lat": 48.043986, "lng": 16.449441}, {"id": "H-45", "lage": "Stadelgasse", "typ": "O", "dn": 100, "lat": 48.042824, "lng": 16.448454}, {"id": "H-46", "lage": "Stadelgasse", "typ": "U", "dn": 100, "lat": 48.042336, "lng": 16.447982}, {"id": "H-47", "lage": "Stadelgasse", "typ": "U", "dn": 100, "lat": 48.041806, "lng": 16.447467}, {"id": "H-48", "lage": "Stadelgasse", "typ": "U", "dn": 100, "lat": 48.041146, "lng": 16.446866}, {"id": "H-49", "lage": "Tannengasse", "typ": "U", "dn": 80, "lat": 48.046195, "lng": 16.450127}, {"id": "H-50", "lage": "Trattengasse", "typ": "U", "dn": 80, "lat": 48.046927, "lng": 16.442445}, {"id": "H-51", "lage": "Trattengasse", "typ": "U", "dn": 80, "lat": 48.046884, "lng": 16.443325}, {"id": "H-52", "lage": "Tulpengasse / Weidengasse", "typ": "U", "dn": 80, "hinweis": "Deckel schwergängig", "lat": 48.047974, "lng": 16.450342}, {"id": "H-53", "lage": "Velmerstraße (L2005)", "typ": "O", "dn": 100, "lat": 48.039754, "lng": 16.44075}, {"id": "H-54", "lage": "Velmerstraße", "typ": "U", "dn": 100, "lat": 48.044531, "lng": 16.448475}, {"id": "H-55", "lage": "Velmerstraße / Feuerwehrhaus", "typ": "O", "dn": 150, "hinweis": "Direkt vor dem Feuerwehrhaus", "lat": 48.044015, "lng": 16.447703}, {"id": "H-56", "lage": "Velmerstraße", "typ": "O", "dn": 150, "lat": 48.045148, "lng": 16.449419}, {"id": "H-57", "lage": "Velmerstraße", "typ": "O", "dn": 100, "lat": 48.043412, "lng": 16.446909}, {"id": "H-58", "lage": "Velmerstraße", "typ": "U", "dn": 100, "lat": 48.042709, "lng": 16.445857}, {"id": "H-59", "lage": "Velmerstraße / Brennereiweg", "typ": "O", "dn": 100, "lat": 48.042179, "lng": 16.445149}, {"id": "H-60", "lage": "Velmerstraße", "typ": "U", "dn": 100, "lat": 48.041677, "lng": 16.44472}, {"id": "H-61", "lage": "Velmerstraße / Rosengasse", "typ": "U", "dn": 100, "lat": 48.04555, "lng": 16.450835}, {"id": "H-62", "lage": "Velmerstraße / Feldstraße", "typ": "U", "dn": 100, "lat": 48.047329, "lng": 16.454097}, {"id": "H-63", "lage": "Velmerstraße", "typ": "U", "dn": 100, "hinweis": "Oft zugeparkt (Kundenparkplätze)", "lat": 48.040916, "lng": 16.444698}, {"id": "H-64", "lage": "Velmerstraße (L2005)", "typ": "O", "dn": 100, "lat": 48.039754, "lng": 16.443003}, {"id": "H-65", "lage": "Velmerstraße", "typ": "U", "dn": 100, "lat": 48.045952, "lng": 16.452402}, {"id": "H-66", "lage": "Velmerstraße", "typ": "O", "dn": 100, "lat": 48.045435, "lng": 16.451694}, {"id": "H-67", "lage": "Velmerstraße / Friedhof-Gasse", "typ": "U", "dn": 100, "lat": 48.045249, "lng": 16.452509}, {"id": "H-68", "lage": "Velmerstraße / Neilkengasse", "typ": "O", "dn": 100, "lat": 48.039883, "lng": 16.444634}, {"id": "H-69", "lage": "Velmerstraße, Seitengasse", "typ": "U", "dn": 100, "lat": 48.043785, "lng": 16.448518}, {"id": "H-70", "lage": "Weidengasse", "typ": "U", "dn": 80, "lat": 48.046798, "lng": 16.449312}, {"id": "H-71", "lage": "Ziegelofengasse", "typ": "U", "dn": 80, "lat": 48.039108, "lng": 16.443926}, {"id": "S-01", "lage": "Schlossteich, Zufahrt Kaplangasse", "typ": "S", "hinweis": "Saugstelle, Zufahrt über Wiese", "lat": 48.044158, "lng": 16.441458}, {"id": "S-02", "lage": "Teich am Winkel Bach", "typ": "S", "hinweis": "Saugstelle, nur bei normalem Wasserstand", "lat": 48.04017, "lng": 16.443905}], "ff": [48.044302, 16.447874]},DATA=G.h,FF=G.ff;
+const TYPES={O:"Überflurhydrant",U:"Unterflurhydrant",S:"Saugstelle"};
+const LBL={O:"Überflur",U:"Unterflur",S:"Saugstellen",ids:"Nummern"};
+const st={key:null,eo:null,sel:null,view:null,sat:false,show:{O:true,U:true,S:true,ids:false}};
+let map=null,lay=null,placing=false;
+const hesc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ll=h=>[h.lat,h.lng];
+const dist=(a,b)=>L.latLng(a).distanceTo(L.latLng(b));
+const fmt=m=>m<1000?Math.round(m/10)*10+" m":(m/1000).toFixed(1).replace(".",",")+" km";
+const vis=h=>st.show[h.typ];
+/* Straßennetz (OpenStreetMap über Overpass), einmal geladen und im Gerät gespeichert, damit es offline geht */
+const B_LEN=20,C_LEN=15,RKEY="hpRoads1";
+let R=null,rState="none",rRes=null;
+const toXY=(lat,lng)=>[(lng-G0[1])*71500,(lat-G0[0])*111320];
+const G0=[48.0435,16.447];
+function buildRoads(raw){
+ const N=new Map(),E=new Map(),segs=[];
+ Object.entries(raw.n).forEach(([id,p])=>N.set(+id,p));
+ const add=(a,b,l)=>{if(!E.has(a))E.set(a,[]);E.get(a).push([b,l]);};
+ raw.w.forEach(w=>{for(let i=1;i<w.length;i++){const a=w[i-1],b=w[i],pa=N.get(a),pb=N.get(b);if(!pa||!pb)continue;
+  const l=L.latLng(pa).distanceTo(L.latLng(pb));add(a,b,l);add(b,a,l);segs.push([a,b,l]);}});
+ return{N,E,segs};}
+function loadRoads(){
+ if(rState!=="none")return;
+ try{const c=JSON.parse(localStorage.getItem(RKEY));if(c&&c.n){R=buildRoads(c);rState="ok";return;}}catch(e){}
+ if(!window.L||!navigator.onLine){rState="fail";return;}
+ rState="load";
+ const b=L.latLngBounds(DATA.map(ll)).pad(.35),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(",");
+ const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out geom;`;
+ const urls=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+ const tryU=i=>fetch(urls[i],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}}).then(r=>{if(!r.ok)throw 0;return r.json();}).catch(e=>{if(i+1<urls.length)return tryU(i+1);throw e;});
+ tryU(0).then(j=>{const n={},w=[];
+   (j.elements||[]).forEach(e=>{if(e.type!=="way"||!e.geometry||!e.nodes)return;e.nodes.forEach((id,i)=>{n[id]=[+e.geometry[i].lat.toFixed(6),+e.geometry[i].lon.toFixed(6)];});w.push(e.nodes);});
+   if(!w.length)throw 0;const raw={n,w};try{localStorage.setItem(RKEY,JSON.stringify(raw));}catch(e){}
+   R=buildRoads(raw);rState="ok";rRes=null;draw();side();})
+  .catch(()=>{rState="fail";side();});}
+/* nächster Punkt auf einer Straße */
+function snap(p){
+ const [px,py]=toXY(p[0],p[1]);let best=null;
+ R.segs.forEach(s=>{const A=R.N.get(s[0]),B=R.N.get(s[1]),[ax,ay]=toXY(A[0],A[1]),[bx,by]=toXY(B[0],B[1]);
+  const dx=bx-ax,dy=by-ay,q=dx*dx+dy*dy;let t=q?((px-ax)*dx+(py-ay)*dy)/q:0;t=Math.max(0,Math.min(1,t));
+  const x=ax+t*dx,y=ay+t*dy,d=Math.hypot(px-x,py-y);
+  if(!best||d<best.d)best={d,s,t,pt:[A[0]+t*(B[0]-A[0]),A[1]+t*(B[1]-A[1])]};});
+ return best;}
+/* kürzeste Wege vom Einsatzort über das Straßennetz (Dijkstra), Einbahnen egal */
+function route(){
+ if(!R||!st.eo)return null;
+ if(rRes&&rRes.eo===st.eo)return rRes;
+ const s0=snap(st.eo),dist0=new Map(),prev=new Map(),H=[];
+ const push=(n,d)=>{H.push([d,n]);let i=H.length-1;while(i){const p=(i-1)>>1;if(H[p][0]<=H[i][0])break;[H[p],H[i]]=[H[i],H[p]];i=p;}};
+ const pop=()=>{const top=H[0],last=H.pop();if(H.length){H[0]=last;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<H.length&&H[l][0]<H[m][0])m=l;if(r<H.length&&H[r][0]<H[m][0])m=r;if(m===i)break;[H[m],H[i]]=[H[i],H[m]];i=m;}}return top;};
+ const [a,b,l]=s0.s;
+ [[a,l*s0.t],[b,l*(1-s0.t)]].forEach(([n,d])=>{if(!dist0.has(n)||d<dist0.get(n)){dist0.set(n,d);prev.set(n,-1);push(n,d);}});
+ while(H.length){const [d,n]=pop();if(d>dist0.get(n))continue;(R.E.get(n)||[]).forEach(([m,w])=>{const nd=d+w;if(!dist0.has(m)||nd<dist0.get(m)){dist0.set(m,nd);prev.set(m,n);push(m,nd);}});}
+ const path=n=>{const p=[];while(n!==-1&&n!=null){p.push(R.N.get(n));n=prev.get(n);}return p;};
+ const res={eo:st.eo,to:{}};
+ DATA.forEach(h=>{const s1=snap(ll(h)),[c,e,len]=s1.s;let best=null;
+  if((c===a&&e===b)||(c===b&&e===a)){const t1=c===a?s1.t:1-s1.t;best={d:Math.abs(t1-s0.t)*len,line:[s0.pt,s1.pt]};}
+  [[c,len*s1.t],[e,len*(1-s1.t)]].forEach(([n,dd])=>{if(!dist0.has(n))return;const tot=dist0.get(n)+dd;if(!best||tot<best.d)best={d:tot,line:[s1.pt,...path(n),s0.pt].reverse()};});
+  if(best){const total=best.d+s0.d+s1.d;res.to[h.id]={d:total,line:[st.eo,...best.line,ll(h)]};}});
+ rRes=res;return res;}
+const hoses=m=>({b:Math.ceil(m/B_LEN),c:Math.ceil(m/C_LEN)});
+const hoseTxt=m=>{const x=hoses(m);return `${x.b} B-Schläuche (${x.b*B_LEN} m)`;};
+
+function icon(t,def){
+ if(t==="S")return `<svg class="hp-ico" viewBox="0 0 26 26"><rect x="3" y="3" width="20" height="20" rx="3" fill="#1F5FA8" stroke="#fff" stroke-width="2"/><path d="M7 15c2-2 4 2 6 0s4 2 6 0" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`;
+ const c=def?"#7A8088":"#C62828";
+ if(t==="O")return `<svg class="hp-ico" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="${c}" stroke="#fff" stroke-width="2.5"/>${def?'<path d="M7 19 19 7" stroke="#fff" stroke-width="2.5"/>':""}</svg>`;
+ return `<svg class="hp-ico" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="#fff" stroke="${c}" stroke-width="5"/>${def?`<path d="M7 19 19 7" stroke="${c}" stroke-width="2.5"/>`:""}</svg>`;}
+const PIN=`<svg width="36" height="44" viewBox="-18 -40 36 44"><path d="M0 0c-6-9-14-14-14-24a14 14 0 0 1 28 0c0 10-8 15-14 24z" fill="#15181C" stroke="#fff" stroke-width="2.5"/><path d="M0-31c3 4 6 7 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 3 2 4 3 4 0-3-1-5 0-8z" fill="#F2A33A"/></svg>`;
+function nearest(){
+ if(!st.eo)return[];
+ const r=route(),dd=h=>r&&r.to[h.id]?r.to[h.id].d:dist(st.eo,ll(h));
+ const hy=DATA.filter(h=>h.typ!=="S"&&h.status!=="defekt").map(h=>({h,d:dd(h),road:!!(r&&r.to[h.id])})).sort((a,b)=>a.d-b.d).slice(0,3);
+ const sg=DATA.filter(h=>h.typ==="S").map(h=>({h,d:dd(h),road:!!(r&&r.to[h.id])})).sort((a,b)=>a.d-b.d)[0];
+ return sg?[...hy,sg]:hy;}
+function mk(h){
+ const sel=h.id===st.sel,def=h.status==="defekt",c=def?"#7A8088":"#C62828";let m;
+ if(h.typ==="S"){const z=sel?28:20;
+  m=L.marker(ll(h),{icon:L.divIcon({className:"",iconSize:[z,z],iconAnchor:[z/2,z/2],html:icon("S").replace('class="hp-ico"',`width="${z}" height="${z}"`)}),zIndexOffset:sel?900:0});}
+ else{const r=sel?11:7;
+  m=h.typ==="O"?L.circleMarker(ll(h),{radius:r,color:"#FFFFFF",weight:2.5,fillColor:c,fillOpacity:1,bubblingMouseEvents:false})
+   :L.circleMarker(ll(h),{radius:r,color:c,weight:sel?5:4,fillColor:"#FFFFFF",fillOpacity:1,bubblingMouseEvents:false});}
+ if(st.show.ids||sel)m.bindTooltip(h.id,{permanent:true,direction:"right",offset:[10,0],className:"hp-tt"});
+ m.on("click",e=>{if(placing){setEO(e.latlng);return;}select(h.id,false);});
+ return m;}
+function draw(){
+ if(!map||!lay)return;
+ lay.clearLayers();
+ if(st.eo)nearest().forEach((n,i)=>{
+  const r=route(),line=r&&r.to[n.h.id]?r.to[n.h.id].line:[st.eo,ll(n.h)];
+  const p=L.polyline(line,{color:n.h.typ==="S"?"#1F5FA8":"#15181C",weight:i?2.5:4,dashArray:i?"7 6":null,opacity:.85,interactive:false}).addTo(lay);
+  if(i===0||n.h.typ==="S")p.bindTooltip(n.h.typ==="S"?fmt(n.d):`${fmt(n.d)}, ${hoses(n.d).b}× B`,{permanent:true,direction:"center",className:"hp-dist"});});
+ DATA.filter(h=>vis(h)&&h.id!==st.sel).forEach(h=>mk(h).addTo(lay));
+ const s=DATA.find(h=>h.id===st.sel);if(s&&vis(s))mk(s).addTo(lay);
+ if(st.eo){const e=L.marker(st.eo,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[36,44],iconAnchor:[18,40],html:PIN})}).addTo(lay);
+  e.on("dragend",()=>setEO(e.getLatLng()));}}
+function row(h,d){const sub=(h.typ==="S"?TYPES.S:`${TYPES[h.typ]}, DN ${h.dn}`)+(d!=null?`<br><b class="hp-hose">${hoses(d).b} B-Schläuche</b>`:"");
+ return `<button type="button" class="hp-row${h.id===st.sel?" sel":""}" data-hid="${h.id}">${icon(h.typ,h.status==="defekt")}<span class="t"><b>${h.id} ${hesc(h.lage)}</b><span>${sub}</span></span>${d!=null?`<span class="d">${fmt(d)}</span>`:""}</button>`;}
+function side(){
+ if(!$("#hpNear"))return;
+ $(".hp").classList.toggle("hp-placing",placing);
+ $("#hpClear").hidden=!st.eo;
+ $("#hpPlace").textContent=placing?"Abbrechen":(st.eo?"Einsatzort neu setzen":"Einsatzort setzen");
+ $("#hpInfo").textContent=st.eo?(rState==="ok"?"Nächste Hydranten und Saugstelle, Weg nur über die Straße. Das Einsatzort-Symbol lässt sich verschieben.":rState==="load"?"Straßennetz wird geladen … bis dahin Luftlinie.":"Straßennetz nicht verfügbar (offline beim ersten Start). Angaben sind Luftlinie."):"Danach auf die Karte tippen. Langes Drücken auf die Karte setzt den Einsatzort direkt.";
+ $("#hpNear").innerHTML=nearest().map(n=>`<li>${row(n.h,n.d)}</li>`).join("");
+ const h=DATA.find(x=>x.id===st.sel);$("#hpDetSec").hidden=!h;
+ if(h){const def=h.status==="defekt";
+  $("#hpDet").innerHTML=`<div class="hp-big">${icon(h.typ,def)}${h.id}</div><dl class="hp-dl"><dt>Lage</dt><dd>${hesc(h.lage)}</dd><dt>Art</dt><dd>${TYPES[h.typ]}</dd>${h.dn?`<dt>Nennweite</dt><dd>DN ${h.dn}</dd>`:""}${st.eo?(()=>{const r=route(),m=r&&r.to[h.id]?r.to[h.id].d:dist(st.eo,ll(h)),x=hoses(m);return `<dt>Zum Einsatzort</dt><dd>${fmt(m)}${r&&r.to[h.id]?" über Straße":" Luftlinie"}</dd>${h.typ!=="S"?`<dt>Schläuche</dt><dd>${x.b} B-Schläuche à ${B_LEN} m (${x.b*B_LEN} m)<br><span class="hp-alt">oder ${x.c} C-Schläuche à ${C_LEN} m</span></dd>`:""}`;})():""}<dt>Feuerwehrhaus</dt><dd>${fmt(dist(FF,ll(h)))}</dd></dl>${h.hinweis?`<div class="hp-note${def?" bad":""}">${hesc(h.hinweis)}</div>`:""}`;}
+ document.querySelectorAll(".hp-row").forEach(b=>b.onclick=()=>select(b.dataset.hid,true));}
+function select(id,center){st.sel=id;
+ if(center&&id&&map){const h=DATA.find(x=>x.id===id);map.setView(ll(h),Math.max(map.getZoom(),18));}
+ draw();side();}
+function setPlacing(v){placing=v;side();}
+function setEO(p){st.eo=[p.lat,p.lng];rRes=null;const n=nearest();st.sel=n.length?n[0].h.id:null;placing=false;draw();side();}
+return function(){
+ const key=alarm?alarmStart:0,fresh=st.key!==key;
+ if(fresh){st.key=key;st.eo=null;st.sel=null;st.view=null;}
+ placing=false;
+ $("#hpTag").textContent=alarm?`${alarm.a}${alarm.l} ${alarm.street}`:"Ohne Alarm";
+ $("#hpChips").innerHTML=Object.keys(LBL).map(f=>`<button type="button" class="hp-chip" data-f="${f}" aria-pressed="${st.show[f]}">${f==="ids"?'<svg class="hp-ico" viewBox="0 0 20 20"><text x="10" y="15" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="14" fill="currentColor">#</text></svg>':icon(f,false)}${LBL[f]}</button>`).join("");
+ document.querySelectorAll(".hp-chip").forEach(c=>c.onclick=()=>{const f=c.dataset.f;st.show[f]=!st.show[f];c.setAttribute("aria-pressed",st.show[f]);const h=DATA.find(x=>x.id===st.sel);if(h&&!vis(h))st.sel=null;draw();side();});
+ const n=t=>DATA.filter(h=>h.typ===t).length;
+ $("#hpStat").textContent=`${n("O")} Überflur, ${n("U")} Unterflur, ${n("S")} Saugstellen`;
+ $("#hpLeg").innerHTML=`${icon("O")}<span>Überflurhydrant</span>${icon("U")}<span>Unterflurhydrant</span>${icon("S")}<span>Saugstelle (offenes Gewässer)</span>${icon("U",true)}<span>Außer Betrieb</span><svg class="hp-ico" viewBox="-18 -40 36 44">${PIN.replace(/^<svg[^>]*>|<\/svg>$/g,"")}</svg><span>Einsatzort</span>`;
+ $("#hpPlace").onclick=()=>setPlacing(!placing);
+ $("#hpClear").onclick=()=>{st.eo=null;st.sel=null;placing=false;draw();side();};
+ const el=$("#hpMap");
+ if(!window.L){el.innerHTML='<p class="lp-note" style="padding:16px">Die Kartenbibliothek konnte nicht geladen werden.</p>';side();return;}
+ map=L.map(el,{zoomSnap:.5,maxZoom:22});
+ const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:22,maxNativeZoom:19,attribution:"&copy; OpenStreetMap-Mitwirkende"});
+ const bmOpt={subdomains:["maps1","maps2","maps3","maps4"],maxZoom:22,maxNativeZoom:19};
+ const HOSTS=["https://mapsneu.wien.gv.at","https://{s}.wien.gv.at","https://maps.wien.gv.at"];
+ let hi=0,he=0,ok=false;
+ const url=(l,x)=>HOSTS[hi]+"/basemap/"+l+"/normal/google3857/{z}/{y}/{x}."+x;
+ const ortho=L.tileLayer(url("bmaporthofoto30cm","jpeg"),{...bmOpt,attribution:"Orthofoto &copy; basemap.at"}),over=L.tileLayer(url("bmapoverlay","png"),bmOpt),sat=L.layerGroup([ortho,over]);
+ ortho.on("tileload",()=>{ok=true;});
+ ortho.on("tileerror",()=>{if(ok)return;if(++he>=3&&hi<HOSTS.length-1){hi++;he=0;ortho.setUrl(url("bmaporthofoto30cm","jpeg"));over.setUrl(url("bmapoverlay","png"));}});
+ let warned=false;[osm,ortho].forEach(t=>t.on("tileerror",()=>{if(t===ortho&&(ok||hi<HOSTS.length-1))return;if(!warned){warned=true;const w=$("#hpTiles");if(w)w.hidden=false;}}));
+ (st.sat?sat:osm).addTo(map);
+ const Btn=L.Control.extend({options:{position:"topright"},onAdd(){
+  const b=L.DomUtil.create("button","lp-layer");b.type="button";L.DomEvent.disableClickPropagation(b);
+  const lb=()=>{b.textContent=st.sat?"Karte":"Satellit";};lb();
+  b.onclick=()=>{st.sat=!st.sat;map.removeLayer(st.sat?osm:sat);(st.sat?sat:osm).addTo(map);lb();};return b;}});
+ new Btn().addTo(map);
+ lay=L.layerGroup().addTo(map);
+ if(st.view)map.setView(st.view.c,st.view.z);else map.fitBounds(L.latLngBounds(DATA.map(ll)),{padding:[20,20]});
+ map.on("moveend",()=>{st.view={c:map.getCenter(),z:map.getZoom()};});
+ map.on("click",e=>{if(placing)setEO(e.latlng);else if(st.sel){st.sel=null;draw();side();}});
+ map.on("contextmenu",e=>setEO(e.latlng));
+ /* Einsatzort aus dem Alarm übernehmen */
+ if(alarm&&fresh){
+  const q=[alarm.street,alarm.city,"Österreich"].filter(Boolean).join(", ");
+  (alarm.pos?Promise.resolve([{lat:alarm.pos.lat,lon:alarm.pos.lng}]):fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q),{headers:{"Accept-Language":"de"}}).then(r=>r.json()))
+   .then(j=>{if(!j||!j[0])throw 0;if(st.key!==key||st.eo)return;setEO({lat:+j[0].lat,lng:+j[0].lon});if(map&&document.body.contains(el))map.setView(st.eo,17);})
+   .catch(()=>{const g=$("#hpGeo");if(g&&!st.eo)g.hidden=false;});}
+ loadRoads();
+ draw();side();
+ setTimeout(()=>map.invalidateSize(),0);};
+})();
 
 /* Chat mit anderen Feuerwehren (Vorschau: lokal, ohne Server) */
 const QUICK=["Rücken aus","Am Einsatzort eingetroffen","Benötigen Unterstützung","Lage unter Kontrolle","Einsatz beendet, rücken ein"];
