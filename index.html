@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.29.0">
+<meta name="version" content="0.29.1">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -250,7 +250,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 
 /* 3D-Ansicht Einsatzort */
-.m3d-wrap{position:relative;height:min(60vh,540px);min-height:300px;margin-top:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.m3d-wrap{position:relative;height:min(60vh,540px);min-height:300px;margin:14px -18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;overflow:hidden;background:var(--bg)}
 .m3d{position:absolute;inset:0}
 .m3d gmp-map-3d{display:block;width:100%;height:100%}
 .m3d-msg{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:20px;text-align:center;color:var(--muted);max-width:none}
@@ -996,7 +996,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.29.0";
+const APP_VERSION="0.29.1";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
