@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.28.0">
+<meta name="version" content="0.28.1">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -942,6 +942,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 <template id="tpl-hydranten">
   <section class="card hp">
     <div class="page-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M9 21V9h6v12M8 9h8M10 9V6a2 2 0 0 1 4 0v3M6 13h3M15 13h3"/></svg><h1>Hydrantenplan</h1><span class="tag" id="hpTag"></span><span class="tag hp-demo">Demo-Daten</span></div>
+    <div class="lp-warn" id="hpRoadWarn" hidden>Das Straßennetz konnte nicht geladen werden. Ohne Straßennetz liegen die Hydranten nicht auf der Straße und die Leitung wird als Luftlinie gerechnet. <button type="button" class="btn" id="hpRetry" style="margin-top:8px">Erneut laden</button></div>
     <p class="lp-warn" id="hpGeo" hidden>Adresse wurde auf der Karte nicht gefunden. Einsatzort bitte selbst setzen.</p>
     <div class="hp-body">
       <div class="hp-mapwrap">
@@ -991,7 +992,7 @@ button.q[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);colo
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.28.0";
+const APP_VERSION="0.28.1";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1388,7 +1389,7 @@ function buildRoads(raw){
  const N=new Map(),E=new Map(),segs=[];
  Object.entries(raw.n).forEach(([id,p])=>N.set(+id,p));
  const add=(a,b,l)=>{if(!E.has(a))E.set(a,[]);E.get(a).push([b,l]);};
- raw.w.forEach(([w,svc])=>{for(let i=1;i<w.length;i++){const a=w[i-1],b=w[i],pa=N.get(a),pb=N.get(b);if(!pa||!pb)continue;
+ raw.w.forEach(x=>{const [w,svc]=Array.isArray(x[0])?x:[x,0];for(let i=1;i<w.length;i++){const a=w[i-1],b=w[i],pa=N.get(a),pb=N.get(b);if(!pa||!pb)continue;
   const l=L.latLng(pa).distanceTo(L.latLng(pb));add(a,b,l);add(b,a,l);segs.push([a,b,l,svc]);}});
  return{N,E,segs};}
 /* Hydrant liegt immer auf der Straße: auf die nächste öffentliche Straße setzen (Zufahrten nur, wenn keine Straße in 60 m) */
@@ -1396,17 +1397,22 @@ function placeHyd(){DATA.forEach(h=>{const p=[h.lat,h.lng],a=snap(p,true),b=a&&a
 function loadRoads(){
  if(rState!=="none")return;
  try{const c=JSON.parse(localStorage.getItem(RKEY));if(c&&c.n){R=buildRoads(c);placeHyd();rState="ok";return;}}catch(e){}
- if(!window.L||!navigator.onLine){rState="fail";return;}
+ /* älteres gespeichertes Netz (Version 0.26) als Ersatz, falls der Abruf nicht klappt */
+ const legacy=()=>{try{const c=JSON.parse(localStorage.getItem("hpRoads1"));if(c&&c.n){R=buildRoads(c);placeHyd();rState="ok";rRes=null;draw();side();return true;}}catch(e){}return false;};
+ if(!window.L||!navigator.onLine){if(!legacy()){rState="fail";side();}return;}
  rState="load";
  const b=L.latLngBounds(DATA.map(ll)).pad(.35),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(v=>v.toFixed(5)).join(",");
  const q=`[out:json][timeout:25];way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|road|primary_link|secondary_link|tertiary_link)$"](${bb});out geom;`;
- const urls=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
- const tryU=i=>fetch(urls[i],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"}}).then(r=>{if(!r.ok)throw 0;return r.json();}).catch(e=>{if(i+1<urls.length)return tryU(i+1);throw e;});
+ const urls=["https://overpass-api.de/api/interpreter","https://overpass.private.coffee/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+ const tryU=i=>{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),20000);
+  return fetch(urls[i],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ac.signal})
+   .then(r=>{clearTimeout(to);if(!r.ok)throw 0;return r.json();}).then(j=>{if(!j||!(j.elements||[]).some(e=>e.type==="way"&&e.nodes&&e.geometry))throw 0;return j;})
+   .catch(e=>{clearTimeout(to);if(i+1<urls.length)return tryU(i+1);throw e;});};
  tryU(0).then(j=>{const n={},w=[];
    (j.elements||[]).forEach(e=>{if(e.type!=="way"||!e.geometry||!e.nodes)return;e.nodes.forEach((id,i)=>{n[id]=[+e.geometry[i].lat.toFixed(6),+e.geometry[i].lon.toFixed(6)];});w.push([e.nodes,e.tags&&e.tags.highway==="service"?1:0]);});
    if(!w.length)throw 0;const raw={n,w};try{localStorage.setItem(RKEY,JSON.stringify(raw));}catch(e){}
    R=buildRoads(raw);placeHyd();rState="ok";rRes=null;draw();side();})
-  .catch(()=>{rState="fail";side();});}
+  .catch(()=>{if(!legacy()){rState="fail";side();}});}
 /* nächster Punkt auf einer Straße */
 function snap(p,noSvc){
  const [px,py]=toXY(p[0],p[1]);let best=null;
@@ -1488,6 +1494,7 @@ function row(h,d){const sub=(h.typ==="S"?TYPES.S:`${TYPES[h.typ]}, DN ${h.dn}`)+
  return `<button type="button" class="hp-row${h.id===st.sel?" sel":""}" data-hid="${h.id}">${icon(h.typ,h.status==="defekt")}<span class="t"><b>${h.id} ${hesc(h.lage)}</b><span>${sub}</span></span>${d!=null?`<span class="d">${fmt(d)}</span>`:""}</button>`;}
 function side(){
  if(!$("#hpNear"))return;
+ const rw=$("#hpRoadWarn");if(rw)rw.hidden=rState!=="fail";
  $(".hp").classList.toggle("hp-placing",placing);
  $("#hpClear").hidden=!st.eo;
  $("#hpPlace").textContent=placing?"Abbrechen":(st.eo?"Einsatzort neu setzen":"Einsatzort setzen");
@@ -1543,6 +1550,7 @@ return function(){
   (alarm.pos?Promise.resolve([{lat:alarm.pos.lat,lon:alarm.pos.lng}]):fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q),{headers:{"Accept-Language":"de"}}).then(r=>r.json()))
    .then(j=>{if(!j||!j[0])throw 0;if(st.key!==key||st.eo)return;setEO({lat:+j[0].lat,lng:+j[0].lon});if(map&&document.body.contains(el))map.setView(st.eo,17);})
    .catch(()=>{const g=$("#hpGeo");if(g&&!st.eo)g.hidden=false;});}
+ $("#hpRetry").onclick=()=>{rState="none";loadRoads();side();};
  loadRoads();
  draw();side();
  setTimeout(()=>map.invalidateSize(),0);};
