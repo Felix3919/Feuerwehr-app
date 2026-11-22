@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#B3261E">
-<meta name="version" content="0.37.0">
+<meta name="version" content="0.41.8">
 <title>Einsatz FF Velm</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -43,22 +43,29 @@ svg{flex:none}
 
 /* Grundgerüst: Menü links, Inhalt rechts */
 .shell{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
-.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;z-index:6;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;min-width:0;background:var(--surface);border-right:1px solid var(--line)}
-.side{flex:1;min-height:0;display:flex;flex-direction:column;gap:2px;padding:12px 10px;background:var(--surface);overflow-y:auto;overflow-x:hidden}
-.nav-i{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 12px;border:0;border-radius:8px;background:transparent;font-weight:600;cursor:pointer;text-align:left;position:relative;color:var(--muted)}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;z-index:6;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;min-width:0;background:var(--surface);border-right:3px solid var(--line)}
+.side{flex:1;min-height:0;display:flex;flex-direction:column;gap:0;padding:0 0 12px;background:var(--surface);overflow-y:auto;overflow-x:hidden}
+.nav-i{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 12px;border:1px solid var(--line);border-radius:3px;background:var(--surface);font-weight:600;cursor:pointer;text-align:left;position:relative;color:var(--muted)}
 .nav-i svg{width:24px;height:24px}
-.nav-i:hover{background:var(--bg);color:var(--ink)}
-.nav-i[aria-current="page"]{background:var(--soft);color:var(--red)}
-.nav-i[aria-current="page"]::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:2px;background:var(--red)}
+.nav-i:hover{background:var(--bg);color:var(--ink);border-color:var(--muted);z-index:1}
+.nav-i+.nav-i{margin-top:-1px}
+.nav-i[aria-current="page"]{background:var(--soft);color:var(--red);border-color:var(--red);z-index:2}
+.nav-i[aria-current="page"]::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:5px;border-radius:3px 0 0 3px;background:var(--red)}
 .nav-i.main{min-height:64px;font-size:19px;color:var(--ink)}
 .nav-i.main[aria-current="page"]{color:var(--red)}
 .nav-i.main svg{width:28px;height:28px}
+.nav-i.alarmed,.nav-i.alarmed:hover,.nav-i.alarmed[aria-current="page"]{background:var(--ac);color:var(--ai);border-color:var(--ac);z-index:3}
+.nav-i.alarmed .lbl small{color:inherit;opacity:.85}
+.nav-i.alarmed[aria-current="page"]::before{background:var(--ai)}
+.nav-i.alarmed .badge{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
 .nav-i .lbl{flex:1;min-width:0;line-height:1.15;hyphens:auto;overflow-wrap:break-word}
 .nav-i .lbl small{display:block;font-size:13px;font-weight:500;color:var(--muted)}
 .badge{font:700 16px/1 "Barlow Condensed",sans-serif;padding:5px 8px;border-radius:5px}
 .sep{height:1px;background:var(--line);margin:8px 6px}
 .nav-i.final{color:var(--ink)}
 .side-foot{margin-top:auto;padding:12px 12px 4px;color:var(--muted);font-size:13px}
+.sf-row{display:flex;align-items:center;gap:12px;margin-top:2px}
+
 .side-hint{padding:2px 12px 6px;font-size:13px;font-weight:600;color:var(--muted)}
 .nav-i .unread{min-width:24px;height:24px;border-radius:12px;background:var(--red);color:var(--on-red);font-size:13px;font-weight:700;display:inline-grid;place-items:center;padding:0 7px}
 /* Chat */
@@ -72,6 +79,17 @@ svg{flex:none}
 .quick{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .quick button{white-space:nowrap;border:1.5px solid var(--line);background:var(--surface);border-radius:20px;padding:0 14px;min-height:42px;font-weight:600;font-size:15px;cursor:pointer}
 .compose{display:flex;gap:8px}
+.compose .att{min-width:52px;min-height:52px;padding:0;justify-content:center;flex:none}
+.compose .att svg{width:24px;height:24px}
+.msg img{display:block;width:260px;max-width:100%;max-height:320px;object-fit:cover;border-radius:8px;margin:4px 0 2px;cursor:zoom-in;background:var(--bg)}
+.ch-prev{display:flex;align-items:center;gap:10px;padding:8px;border:1.5px dashed var(--line);border-radius:8px}
+.ch-prev[hidden]{display:none}
+.ch-prev img{width:64px;height:64px;object-fit:cover;border-radius:6px;flex:none}
+.ch-prev span{flex:1;font-size:14px;color:var(--muted)}
+.ch-prev .btn{min-width:48px;padding:0;justify-content:center}
+.lbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px calc(env(safe-area-inset-bottom,0px) + 8px);cursor:zoom-out}
+.lbox img{max-width:100%;max-height:100%;object-fit:contain}
+.lbox button{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;min-width:52px;min-height:52px;border-radius:26px;border:0;background:#FFFFFF;color:#15181C;font-size:22px;font-weight:700;cursor:pointer}
 .compose input{flex:1;min-width:0;min-height:52px;border:1.5px solid var(--line);border-radius:8px;padding:0 14px;font:inherit;font-weight:500;background:var(--surface);color:var(--ink)}
 /* Gefahrstoffe: Warntafel */
 .plate-wrap{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
@@ -178,20 +196,25 @@ svg{flex:none}
 .gtel{font-weight:700;white-space:nowrap}
 .gp .muted+.muted{margin-top:-6px}
 .calc select{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:0 8px;min-height:48px}
-.nav-i.more{min-height:44px;font-size:15px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
-.nav-i.add{min-height:46px;margin:2px 0;border:1.5px dashed var(--line);color:var(--muted)}
+.nav-i.more{min-height:44px;justify-content:center}
+/* Kästchen randbündig: ohne Abstand links/rechts, ohne Seitenrahmen */
+@media (min-width:761px){.side .nav-i{border-left:0;border-right:0;border-radius:0;padding:0 14px}.side .nav-i[aria-current="page"]::before{left:0;border-radius:0}.side .nav-i.add{border-left:0;border-right:0}.side .nav-i:first-child{border-top:0}
+.side .sep{margin:-1px 0;height:3px;position:relative;z-index:4;background:var(--line)}}
+.nav-i.more .plus{font:700 28px/1 "Barlow",sans-serif;color:var(--red)}
+.nav-i.add{min-height:46px;margin:0;border:1.5px dashed var(--line);border-radius:3px;color:var(--muted)}
 .nav-i.add .plus{font:700 22px/1 "Barlow",sans-serif;color:var(--red)}
 
 main{padding:16px;display:grid;gap:16px;align-content:start;width:100%;min-width:0}
 
 @media (max-width:760px){
   .shell{grid-template-columns:1fr;align-content:start}
-  .rail{height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .rail{height:auto;border-right:0;border-bottom:3px solid var(--line)}
   .side{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px 8px;scrollbar-width:none}
   .side::-webkit-scrollbar{display:none}
   .nav-i,.nav-i.main{min-height:48px;font-size:16px;white-space:nowrap;padding:0 12px}
   .nav-i .lbl small,.sep,.side-foot,.side-hint{display:none}
-  .nav-i[aria-current="page"]::before{left:10px;right:10px;top:auto;bottom:2px;width:auto;height:3px}
+  .nav-i[aria-current="page"]::before{left:-1px;right:-1px;top:auto;bottom:-1px;width:auto;height:4px;border-radius:0 0 3px 3px}
+  .nav-i+.nav-i{margin-top:0;margin-left:-1px}
 }
 
 /* Alarm-Bühne */
@@ -539,13 +562,6 @@ main.bleed .lp>.lp-note{order:4;padding:0 18px 14px}
 
 <div class="shell">
   <aside class="rail">
-<header class="top">
-  <div class="bar">
-    <svg class="crest" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="var(--red)"/><path d="M20 10c4 5 6 8 6 12a6 6 0 0 1-12 0c0-2 1-4 2-5 0 2 1 3 2 3 0-4 1-7 2-10z" fill="var(--on-red)"/></svg>
-    <div class="brand"><b>FF Velm</b><small>Einsatz-App <span class="ver"></span></small></div>
-    <span class="conn" id="conn"><i></i><span>Online</span></span>
-  </div>
-</header>
   <nav class="side" id="side" aria-label="Menü"></nav>
   </aside>
   <main id="main"></main>
@@ -640,7 +656,8 @@ main.bleed .lp>.lp-note{order:4;padding:0 18px 14px}
     <p class="muted" id="chMembers"></p>
     <ul class="msgs" id="msgs" aria-live="polite"></ul>
     <div class="quick" id="quick" aria-label="Schnellnachrichten"></div>
-    <div class="compose"><input id="chIn" type="text" placeholder="Nachricht an alle Feuerwehren" autocomplete="off" enterkeyhint="send" aria-label="Nachricht"><button class="btn primary" id="chSend">Senden</button></div>
+    <div class="ch-prev" id="chPrev" hidden><img id="chPrevImg" alt="Ausgewähltes Foto"><span id="chPrevTxt">Foto bereit – optional Text dazu schreiben, dann Senden</span><button class="btn" id="chPrevX" aria-label="Foto entfernen">✕</button></div>
+    <div class="compose"><input type="file" id="chFile" accept="image/*" hidden><button class="btn att" id="chAtt" aria-label="Foto aufnehmen oder auswählen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></button><input id="chIn" type="text" placeholder="Nachricht an alle Feuerwehren" autocomplete="off" enterkeyhint="send" aria-label="Nachricht"><button class="btn primary" id="chSend">Senden</button></div>
   </section>
 </template>
 
@@ -1121,7 +1138,7 @@ main.bleed .lp>.lp-note{order:4;padding:0 18px 14px}
 //# sourceMappingURL=leaflet.js.map
 </script>
 <script>
-const APP_VERSION="0.37.0";
+const APP_VERSION="0.41.8";
 
 /* Google 3D Maps: API-Schlüssel hier eintragen (Demo Key oder eingeschränkter Schlüssel) */
 const GMAPS_KEY="AIzaSyBOoZckhbydayEtdpJ0Nbln0ChDzAy9se0";
@@ -1190,20 +1207,19 @@ let extra=new Set(),moreOpen=false,unread=0,chatTimers=[],chatAlarm=[];
 const ME="FF Velm";
 let chatGeneral=[{from:"FF Himberg",text:"Übung am Samstag findet wie geplant statt.",t:new Date(Date.now()-1728e5)},{from:ME,me:true,text:"Danke, wir kommen mit 2 Fahrzeugen.",t:new Date(Date.now()-1692e5)}];
 const vis=v=>!alarm||!v.need||v.need(alarm.a,alarm.l,alarm)||extra.has(v.id);
-function navBtn(v){const cur=v.id===view?' aria-current="page"':"";let bd="";
- if(v.id==="alarmierung"&&alarm){const c=AS[alarm.a].c[alarm.l];bd=`<span class="badge" style="background:${c};color:${inkOn(c)}">${alarm.a}${alarm.l}</span>`;}
+function navBtn(v){const cur=v.id===view?' aria-current="page"':"";let bd="",st="",cl=v.cls||"";
+ if(v.id==="alarmierung"&&alarm){const c=AS[alarm.a].c[alarm.l];bd=`<span class="badge">${alarm.a}${alarm.l}</span>`;st=` style="--ac:${c};--ai:${inkOn(c)}"`;cl+=" alarmed";}
  if(v.id==="atemschutz"&&atsAlarmN)bd=`<span class="unread" aria-label="${atsAlarmN} Trupp(s) mit Warnung">${atsAlarmN}</span>`;
  if(v.id==="chat"&&unread)bd=`<span class="unread" aria-label="${unread} ungelesen">${unread}</span>`;
- return `<button class="nav-i ${v.cls||""}" data-v="${v.id}"${cur}>${I[v.i]}<span class="lbl">${v.t}${v.sub?`<small>${v.sub}</small>`:""}</span>${bd}</button>`;}
+ return `<button class="nav-i ${cl}" data-v="${v.id}"${cur}${st}>${I[v.i]}<span class="lbl">${v.t}${v.sub?`<small>${v.sub}</small>`:""}</span>${bd}</button>`;}
 function renderSide(){
  const tools=VIEWS.filter(v=>v.tool),shown=tools.filter(vis),hidden=tools.filter(v=>!vis(v));
  let h=navBtn(VIEWS[0])+'<div class="sep" role="presentation"></div>';
- if(alarm)h+=`<div class="side-hint">Passend zu ${alarm.a}${alarm.l}</div>`;
  h+=shown.map(navBtn).join("")+navBtn(VIEWS.find(v=>v.id==="chat"));
  if(alarm&&hidden.length){
-  h+=`<button class="nav-i more" data-more aria-expanded="${moreOpen}"><span class="lbl">${moreOpen?"Weniger anzeigen":"Weitere Punkte hinzufügen ("+hidden.length+")"}</span></button>`;
+  h+=`<button class="nav-i more" data-more aria-expanded="${moreOpen}" aria-label="${moreOpen?"Weniger anzeigen":"Weitere Punkte hinzufügen ("+hidden.length+")"}" title="${moreOpen?"Weniger anzeigen":"Weitere Punkte hinzufügen"}"><span class="plus" aria-hidden="true">${moreOpen?"−":"+"}</span></button>`;
   if(moreOpen)h+=hidden.map(v=>`<button class="nav-i add" data-add="${v.id}">${I[v.i]}<span class="lbl">${v.t}</span><span class="plus" aria-hidden="true">+</span></button>`).join("");}
- h+='<div class="sep" role="presentation"></div>'+navBtn(VIEWS.find(v=>v.id==="einsatzbericht"))+'<div class="side-foot">Made by Felix Horak<br><span class="ver">v'+APP_VERSION+'</span></div>';
+ h+='<div class="sep" role="presentation"></div>'+navBtn(VIEWS.find(v=>v.id==="einsatzbericht"))+'<div class="side-foot">Made by Felix Horak<div class="sf-row"><span class="ver">v'+APP_VERSION+'</span>'+(navigator.onLine?'<span class="conn" id="conn"><i></i><span>Online</span></span>':'<span class="conn off" id="conn"><i></i><span>Offline</span></span>')+'</div></div>';
  $("#side").innerHTML=h;}
 
 /* Ansichten */
@@ -1746,7 +1762,10 @@ async function rkDraw(){const v=rkV;if(!v)return;const gen=++v.gen,body=$("#rkVB
 const rkNew=()=>({make:"",model:"",year:"",drive:""});
 const rkLink=c=>"https://www.google.com/search?q="+encodeURIComponent(["Rettungskarte",c.make,c.model,c.year,"pdf"].filter(Boolean).join(" "));
 /* „Direkt öffnen“: DuckDuckGo leitet mit vorangestelltem \ direkt zum ersten Treffer weiter */
-const rkDirect=c=>"https://duckduckgo.com/?q="+encodeURIComponent("\\"+["Rettungskarte",c.make,c.model,c.year,"filetype:pdf"].filter(Boolean).join(" "));
+const rkDirectWeb=c=>"https://duckduckgo.com/?q="+encodeURIComponent("\\"+["Rettungskarte",c.make,c.model,c.year,"filetype:pdf"].filter(Boolean).join(" "));
+/* Android: Link zwingend in Chrome öffnen, sonst fängt die DuckDuckGo-App ihn ab und leitet nicht weiter */
+const rkDirect=c=>{const u=rkDirectWeb(c);if(!/Android/i.test(navigator.userAgent))return u;
+ return "intent://"+u.replace(/^https:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";};
 function rkUpd(el,c){const a=el.querySelector(".rk-go");a.href=rkLink(c);a.setAttribute("aria-disabled",String(!c.make.trim()));
  {const d=el.querySelector(".rk-direct");d.href=rkDirect(c);d.setAttribute("aria-disabled",String(!(c.make.trim()&&c.model.trim())));}
  const f=rkFiles.get(c),sb=el.querySelector(".rk-show"),fn=el.querySelector(".rk-fname");sb.hidden=!f;fn.hidden=!f;if(f)fn.textContent="Geladen: "+f.name;
@@ -1790,16 +1809,39 @@ function renderChat(){
  $("#chMembers").textContent=alarm?"Teilnehmer: "+alarm.units:"Kanal für alle Feuerwehren im Abschnitt";
  const box=$("#msgs");
  box.innerHTML=curChat().map(m=>m.sys?`<li class="msg sys">${esc(m.text)}</li>`:
-  `<li class="msg${m.me?" me":""}">${m.me?"":`<div class="who">${esc(m.from)}</div>`}${esc(m.text)}<time>${fmtDT(m.t)}</time></li>`).join("");
+  `<li class="msg${m.me?" me":""}">${m.me?"":`<div class="who">${esc(m.from)}</div>`}${m.img?`<img src="${m.img}" alt="Foto${m.me?"":" von "+esc(m.from)}" data-zoom>`:""}${m.text?esc(m.text):""}<time>${fmtDT(m.t)}</time></li>`).join("");
+ box.querySelectorAll("img").forEach(i=>{i.onload=()=>{box.scrollTop=box.scrollHeight;};});
  box.scrollTop=box.scrollHeight;}
-function postMsg(m,list){(list||curChat()).push(m);if(view==="chat")renderChat();else if(!m.me){unread++;renderSide();}}
+/* Fotos: verkleinern (max. 1280 px, JPEG) und Vollbild-Ansicht */
+let chPending=null;
+function shrinkImg(file,max=1280,q=.75){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");
+  c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+  URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",q));};
+ im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Bild nicht lesbar"));};im.src=u;});}
+function openLbox(src){const d=document.createElement("div");d.className="lbox";d.setAttribute("role","dialog");d.setAttribute("aria-label","Foto");
+ d.innerHTML=`<img src="${src}" alt="Foto"><button aria-label="Schließen">✕</button>`;
+ const close=()=>{d.remove();document.removeEventListener("keydown",key);},key=e=>{if(e.key==="Escape")close();};
+ d.onclick=close;document.addEventListener("keydown",key);document.body.appendChild(d);d.querySelector("button").focus();}
+function postMsg(m,list){(list||curChat()).push(m);if(view==="chat")renderChat();else if(!m.me){unread++;renderSide();}if(alarm&&m.img)saveAlarm();}
 function initChat(){
- const send=t=>{t=t.trim();if(!t)return;postMsg({from:ME,me:true,text:t,t:new Date()});};
+ const send=(t,img)=>{t=t.trim();if(!t&&!img)return;const m={from:ME,me:true,text:t,t:new Date()};if(img)m.img=img;postMsg(m);};
+ chPending=null;
+ const prev=$("#chPrev"),file=$("#chFile");
+ const setPending=img=>{chPending=img;prev.hidden=!img;if(img)$("#chPrevImg").src=img;};
+ $("#chAtt").onclick=()=>file.click();
+ file.onchange=async()=>{const f=file.files[0];file.value="";if(!f)return;
+  $("#chPrevTxt").textContent="Foto wird vorbereitet …";prev.hidden=false;
+  try{setPending(await shrinkImg(f));$("#chPrevTxt").textContent="Foto bereit – optional Text dazu schreiben, dann Senden";inp.focus();}
+  catch(e){setPending(null);alert("Das Foto konnte nicht gelesen werden.");}};
+ $("#chPrevX").onclick=()=>setPending(null);
+ $("#msgs").onclick=e=>{const i=e.target.closest("img[data-zoom]");if(i)openLbox(i.src);};
+ const sendNow=()=>{send(inp.value,chPending);inp.value="";setPending(null);};
  $("#quick").innerHTML=QUICK.map(q=>`<button>${q}</button>`).join("");
  $("#quick").onclick=e=>{const b=e.target.closest("button");if(b)send(b.textContent);};
  const inp=$("#chIn");
- $("#chSend").onclick=()=>{send(inp.value);inp.value="";inp.focus();};
- inp.onkeydown=e=>{if(e.key==="Enter"){send(inp.value);inp.value="";}};
+ $("#chSend").onclick=()=>{sendNow();inp.focus();};
+ inp.onkeydown=e=>{if(e.key==="Enter")sendNow();};
  renderChat();}
 function startChat(){
  chatTimers.forEach(clearTimeout);chatTimers=[];unread=0;
@@ -2132,15 +2174,19 @@ function atsTick(){
 setInterval(atsTick,1000);
 
 /* Verbindungsstatus */
-function conn(){const on=navigator.onLine;$("#conn").classList.toggle("off",!on);$("#conn span").textContent=on?"Online":"Offline";}
+function conn(){const on=navigator.onLine;if(!$("#conn"))return;$("#conn").classList.toggle("off",!on);$("#conn span").textContent=on?"Online":"Offline";}
 addEventListener("online",conn);addEventListener("offline",conn);conn();
 
 /* Laufenden Einsatz sichern, damit Neuladen (z. B. versehentliches Herunterwischen) ihn nicht beendet */
 const AKEY="ffvAlarm1";
 function saveAlarm(){try{
  if(!alarm){localStorage.removeItem(AKEY);return;}
- localStorage.setItem(AKEY,JSON.stringify({alarm,alarmStart,resp,oe,chatAlarm,extra:[...extra],
-  lp:lpItems.map(({id,k,lat,lng,label})=>({id,k,lat,lng,label})),lpFor,lpEO,rk:rkCars,rkFor}));}catch(e){}}
+ const pack=ch=>JSON.stringify({alarm,alarmStart,resp,oe,chatAlarm:ch,extra:[...extra],
+  lp:lpItems.map(({id,k,lat,lng,label})=>({id,k,lat,lng,label})),lpFor,lpEO,rk:rkCars,rkFor});
+ /* Fotos sind groß: passt der Speicher nicht, werden sie beim Sichern weggelassen (Text bleibt) */
+ try{localStorage.setItem(AKEY,pack(chatAlarm));}
+ catch(e){localStorage.setItem(AKEY,pack(chatAlarm.map(m=>m.img?{...m,img:null,text:m.text||"[Foto nicht gespeichert]"}:m)));}
+}catch(e){}}
 (function restoreAlarm(){try{
  const d=JSON.parse(localStorage.getItem(AKEY));
  if(!d||!d.alarm||Date.now()-d.alarmStart>864e5)return;
